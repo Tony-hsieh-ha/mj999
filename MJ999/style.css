@@ -444,6 +444,111 @@ body {
     }
 }
 
+/* 時間選擇器樣式 */
+.time-selector {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.quick-time-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.time-btn {
+    background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
+    border: 2px solid #4a4a4a;
+    color: #ffffff;
+    padding: 12px 8px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.time-btn:hover {
+    background: linear-gradient(135deg, #4a4a4a 0%, #3a3a3a 100%);
+    border-color: #ffd700;
+    transform: translateY(-2px);
+}
+
+.time-btn.active {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #000000;
+    border-color: #ffd700;
+}
+
+.custom-time-input {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border-radius: 8px;
+}
+
+.custom-time-input input[type="time"] {
+    background: #3a3a3a;
+    border: 2px solid #4a4a4a;
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.custom-time-input input[type="time"]:focus {
+    outline: none;
+    border-color: #ffd700;
+}
+
+.time-label {
+    color: #cccccc;
+    font-size: 0.9rem;
+}
+
+/* 金額統計樣式 */
+.amount-stats {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #3a3a3a;
+}
+
+.stat-row:last-child {
+    border-bottom: none;
+}
+
+.amount-label {
+    color: #ffd700;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.amount-count {
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 1rem;
+    background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
+    padding: 4px 12px;
+    border-radius: 15px;
+}
+
 /* 用戶頭貼樣式 */
 .user-avatar-small {
     width: 50px;
@@ -457,6 +562,80 @@ body {
     height: 80px;
     border-radius: 50%;
     border: 3px solid #ffd700;
+}
+
+/* 用戶操作按鈕樣式 */
+.user-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cancel-btn {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+}
+
+.cancel-btn:hover {
+    background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+    transform: translateY(-1px);
+}
+
+.change-btn {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+    color: #000;
+}
+
+.change-btn:hover {
+    background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
+    transform: translateY(-1px);
+}
+
+.confirm-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.confirm-btn:hover {
+    background: linear-gradient(135deg, #20c997 0%, #1ea085 100%);
+    transform: translateY(-1px);
+}
+
+/* 成桌確認介面樣式 */
+.table-confirmation {
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.user-confirmation-buttons {
+    margin-top: 15px;
+}
+
+.registration-preferred-time {
+    color: #ffd700;
+    font-size: 0.9rem;
+    margin-top: 5px;
 }
 
 /* 登入提示樣式 */

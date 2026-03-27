@@ -119,6 +119,9 @@ class MahjongRegistrationSystem {
             });
         }
 
+        // 時間選擇器事件
+        this.setupTimeSelector();
+
         // 管理後台按鈕
         document.getElementById('createTable').addEventListener('click', () => {
             this.createTable();
@@ -132,6 +135,47 @@ class MahjongRegistrationSystem {
 
         document.getElementById('lineNotifySettings').addEventListener('click', () => {
             this.showLineNotifySettings();
+        });
+    }
+
+    // 設置時間選擇器
+    setupTimeSelector() {
+        // 快捷時間按鈕
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const time = e.target.dataset.time;
+                this.selectTime(time, e.target);
+            });
+        });
+
+        // 自訂時間輸入
+        const customTimeInput = document.getElementById('preferredTime');
+        if (customTimeInput) {
+            customTimeInput.addEventListener('change', (e) => {
+                this.selectCustomTime(e.target.value);
+            });
+        }
+    }
+
+    // 選擇時間
+    selectTime(time, buttonElement) {
+        // 清除所有按鈕的active狀態
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // 設置當前按鈕為active
+        buttonElement.classList.add('active');
+        
+        // 設置時間輸入框的值
+        document.getElementById('preferredTime').value = time;
+    }
+
+    // 選擇自訂時間
+    selectCustomTime(time) {
+        // 清除所有快捷按鈕的active狀態
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            btn.classList.remove('active');
         });
     }
 
@@ -161,6 +205,7 @@ class MahjongRegistrationSystem {
     handleRegistration() {
         const nickname = document.getElementById('nickname').value.trim();
         const amount = document.querySelector('input[name="amount"]:checked');
+        const preferredTime = document.getElementById('preferredTime').value;
 
         if (!nickname) {
             this.showNotification('請輸入暱稱', 'error');
@@ -169,6 +214,11 @@ class MahjongRegistrationSystem {
 
         if (!amount) {
             this.showNotification('請選擇金額', 'error');
+            return;
+        }
+
+        if (!preferredTime) {
+            this.showNotification('請選擇希望開打時間', 'error');
             return;
         }
 
@@ -181,7 +231,8 @@ class MahjongRegistrationSystem {
         const registration = {
             id: Date.now(),
             nickname: nickname,
-            amount: parseInt(amount.value),
+            amount: amount.value,
+            preferredTime: preferredTime,
             timestamp: new Date().toISOString(),
             status: 'waiting'
         };
@@ -192,11 +243,161 @@ class MahjongRegistrationSystem {
 
         // 清空表單
         document.getElementById('registrationForm').reset();
+        this.clearTimeSelection();
         
-        this.showNotification(`報名成功！${nickname} 已報名 $${amount.value}`, 'success');
+        this.showNotification(`報名成功！${nickname} 已報名 $${amount.value}，希望 ${preferredTime} 開打`, 'success');
         
         // 發送 LINE Notify 通知（如果已設定）
-        this.sendLineNotify(`新報名：${nickname} 報名 $${amount.value}`);
+        this.sendLineNotify(`新報名：${nickname} 報名 $${amount.value}，希望 ${preferredTime} 開打`);
+        
+        // 檢查是否成桌
+        this.checkForCompleteTable(amount.value);
+    }
+
+    // 取消報名
+    cancelRegistration(registrationId) {
+        const registration = this.registrations.find(reg => reg.id === registrationId);
+        if (registration) {
+            this.registrations = this.registrations.filter(reg => reg.id !== registrationId);
+            this.saveData();
+            this.updateUI();
+            this.showNotification(`${registration.nickname} 已取消報名`, 'info');
+            this.sendLineNotify(`${registration.nickname} 取消了報名`);
+        }
+    }
+
+    // 清除時間選擇
+    clearTimeSelection() {
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.getElementById('preferredTime').value = '';
+    }
+
+    // 檢查是否成桌
+    async checkForCompleteTable(amount) {
+        try {
+            const table = await mockAPI.checkForCompleteTable(amount);
+            if (table) {
+                this.showNotification(`🎯 成桌！$${amount} 已湊滿4人，正在發送通知...`, 'success');
+                this.displayTableConfirmation(table);
+            }
+        } catch (error) {
+            console.error('成桌檢查錯誤:', error);
+        }
+    }
+
+    // 顯示成桌確認介面
+    displayTableConfirmation(table) {
+        const confirmationHtml = `
+            <div class="table-confirmation" style="background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); border: 2px solid #ffd700; border-radius: 15px; padding: 20px; margin: 20px 0;">
+                <h3 style="color: #ffd700; margin-bottom: 15px;">🎯 成桌確認</h3>
+                <div style="color: #ffffff; margin-bottom: 15px;">
+                    <p><strong>金額：</strong>$${table.amount}</p>
+                    <p><strong>玩家：</strong>${table.players.map(p => p.nickname).join(', ')}</p>
+                    <p><strong>開打時間：</strong>${this.getMostCommonTime(table.players)}</p>
+                </div>
+                <div class="confirmation-status" id="confirmation-${table.id}">
+                    ${this.renderConfirmationStatus(table)}
+                </div>
+            </div>
+        `;
+        
+        // 在報名列表上方插入確認介面
+        const registrationList = document.getElementById('registrationList');
+        registrationList.insertAdjacentHTML('afterbegin', confirmationHtml);
+    }
+
+    // 渲染確認狀態
+    renderConfirmationStatus(table) {
+        const currentUser = this.currentUser;
+        const playerConfirmation = table.confirmations[currentUser?.id] || { status: 'pending' };
+        
+        if (playerConfirmation.status === 'pending' && table.players.some(p => p.id === currentUser?.id)) {
+            return `
+                <div class="user-confirmation-buttons" style="display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="registrationSystem.respondToTable(${table.id}, 'agreed')" class="action-btn confirm-btn">✅ 同意</button>
+                    <button onclick="registrationSystem.respondToTable(${table.id}, 'disagreed')" class="action-btn cancel-btn">❌ 不同意</button>
+                </div>
+            `;
+        } else if (playerConfirmation.status !== 'pending') {
+            return `
+                <div style="text-align: center; color: #ffffff;">
+                    您已${playerConfirmation.status === 'agreed' ? '同意' : '不同意'}成桌
+                </div>
+            `;
+        }
+        
+        return '<div style="text-align: center; color: #cccccc;">等待玩家回覆...</div>';
+    }
+
+    // 回應成桌確認
+    async respondToTable(tableId, response) {
+        try {
+            const currentUser = this.currentUser;
+            if (!currentUser) {
+                this.showNotification('請先登入', 'error');
+                return;
+            }
+
+            const result = await mockAPI.handlePlayerResponse(currentUser.id, tableId, response);
+            
+            if (result.success) {
+                const table = result.table;
+                const statusElement = document.getElementById(`confirmation-${tableId}`);
+                if (statusElement) {
+                    statusElement.innerHTML = this.renderConfirmationStatus(table);
+                }
+                
+                if (table.status === 'confirmed') {
+                    this.showNotification('✅ 成桌確定！請準時到場', 'success');
+                    // 將這4個玩家設為已配對
+                    table.players.forEach(player => {
+                        const registration = this.registrations.find(reg => reg.id === player.id);
+                        if (registration) {
+                            registration.status = 'matched';
+                        }
+                    });
+                    this.saveData();
+                    this.updateUI();
+                } else if (table.status === 'cancelled') {
+                    this.showNotification('❌ 成桌取消', 'info');
+                }
+            }
+        } catch (error) {
+            console.error('回應成桌錯誤:', error);
+            this.showNotification('操作失敗，請重試', 'error');
+        }
+    }
+
+    // 獲取最常見的開打時間
+    getMostCommonTime(players) {
+        const timeCounts = {};
+        players.forEach(player => {
+            const time = player.preferredTime || '未設定';
+            timeCounts[time] = (timeCounts[time] || 0) + 1;
+        });
+
+        const mostCommon = Object.entries(timeCounts)
+            .sort(([,a], [,b]) => b - a)[0];
+
+        return mostCommon ? mostCommon[0] : '未設定';
+    }
+    changeRegistrationAmount(registrationId) {
+        const registration = this.registrations.find(reg => reg.id === registrationId);
+        if (registration) {
+            const newAmount = prompt('請選擇新的金額 (30/10, 60/20, 100/20, 200/50):', registration.amount);
+            if (newAmount && ['30/10', '60/20', '100/20', '200/50'].includes(newAmount)) {
+                registration.amount = newAmount;
+                registration.timestamp = new Date().toISOString();
+                this.saveData();
+                this.updateUI();
+                this.showNotification(`${registration.nickname} 已更改金額為 $${newAmount}`, 'success');
+                this.sendLineNotify(`${registration.nickname} 更改報名金額為 $${newAmount}`);
+            } else if (newAmount) {
+                this.showNotification('請選擇有效的金額選項', 'error');
+            }
+        }
     }
 
     // 創建桌子
@@ -254,9 +455,25 @@ class MahjongRegistrationSystem {
 
     // 更新UI
     updateUI() {
+        this.updateAmountStats();
         this.updateRegistrationList();
         this.updateAdminStats();
         this.updateAdminRegistrationList();
+    }
+
+    // 更新金額統計
+    updateAmountStats() {
+        const amounts = ['30/10', '60/20', '100/20', '200/50'];
+        
+        amounts.forEach(amount => {
+            const count = this.registrations.filter(reg => 
+                reg.status === 'waiting' && reg.amount === amount
+            ).length;
+            const element = document.getElementById(`count-${amount.replace('/', '-')}`);
+            if (element) {
+                element.textContent = `${count}人`;
+            }
+        });
     }
 
     // 更新玩家報名列表
@@ -269,16 +486,26 @@ class MahjongRegistrationSystem {
             return;
         }
 
-        listContainer.innerHTML = waitingRegistrations.map(reg => `
-            <div class="registration-item">
-                <div class="registration-info">
-                    <div class="registration-name">${reg.nickname}</div>
-                    <div class="registration-amount">$${reg.amount}</div>
-                    <div class="registration-time">${this.formatTime(reg.timestamp)}</div>
+        listContainer.innerHTML = waitingRegistrations.map(reg => {
+            const isCurrentUser = this.currentUser && reg.nickname === this.currentUser.displayName;
+            return `
+                <div class="registration-item">
+                    <div class="registration-info">
+                        <div class="registration-name">${reg.nickname}</div>
+                        <div class="registration-amount">$${reg.amount}</div>
+                        <div class="registration-time">${this.formatTime(reg.timestamp)}</div>
+                        <div class="registration-preferred-time">🕐 ${reg.preferredTime || '未設定'}</div>
+                    </div>
+                    <span class="table-status waiting">等待中</span>
+                    ${isCurrentUser ? `
+                        <div class="user-actions">
+                            <button onclick="registrationSystem.cancelRegistration(${reg.id})" class="action-btn cancel-btn">取消報名</button>
+                            <button onclick="registrationSystem.changeRegistrationAmount(${reg.id})" class="action-btn change-btn">更改金額</button>
+                        </div>
+                    ` : ''}
                 </div>
-                <span class="table-status waiting">等待中</span>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     // 更新管理後台統計
