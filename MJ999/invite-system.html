@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配對約局系統 - 智能管理</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .invite-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .create-session-card {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            border: 1px solid #3a3a3a;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .sessions-list {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            border: 1px solid #3a3a3a;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .session-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            border: 1px solid #3a3a3a;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .session-card:hover {
+            border-color: #ffd700;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.1);
+        }
+
+        .session-card.full {
+            border-color: #28a745;
+            box-shadow: 0 0 20px rgba(40, 167, 69, 0.2);
+        }
+
+        .session-card.waiting {
+            border-color: #ffc107;
+            box-shadow: 0 0 20px rgba(255, 193, 7, 0.2);
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .session-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .session-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-waiting {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #000;
+        }
+
+        .status-full {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .status-playing {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+        }
+
+        .session-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-icon {
+            color: #ffd700;
+            font-size: 1.2rem;
+        }
+
+        .detail-text {
+            color: #cccccc;
+        }
+
+        .players-list {
+            background: linear-gradient(135deg, #0a0a0a 0%, #000000 100%);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .player-item:last-child {
+            border-bottom: none;
+        }
+
+        .player-name {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .player-time {
+            color: #888888;
+            font-size: 0.9rem;
+        }
+
+        .empty-slot {
+            color: #666666;
+            font-style: italic;
+        }
+
+        .session-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-join {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-leave {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+        }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            border: 2px solid #3a3a3a;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .time-slot {
+            padding: 10px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            border: 2px solid #3a3a3a;
+            border-radius: 8px;
+            color: #ffffff;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .time-slot:hover {
+            border-color: #ffd700;
+        }
+
+        .time-slot.selected {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #000000;
+            border-color: #ffd700;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            border: 1px solid #3a3a3a;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3a3a3a;
+            padding-bottom: 10px;
+        }
+
+        .filter-tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: #cccccc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+
+        .filter-tab:hover {
+            color: #ffd700;
+        }
+
+        .filter-tab.active {
+            color: #ffd700;
+            border-bottom-color: #ffd700;
+        }
+
+        .notification-settings {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            border: 1px solid #3a3a3a;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .invite-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .session-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-overview {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">� 配對約局系統</h1>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="location.href='index.html'">報名系統</button>
+                <button class="nav-btn active">配對約局</button>
+                <button class="nav-btn" onclick="location.href='schedule.html'">排班管理</button>
+                <button class="nav-btn" onclick="location.href='inventory.html'">庫存管理</button>
+            </div>
+        </header>
+
+        <!-- 統計概覽 -->
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-number" id="activeSessions">0</div>
+                <div class="stat-label">進行中約局</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="waitingPlayers">0</div>
+                <div class="stat-label">等待中玩家</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="todaySessions">0</div>
+                <div class="stat-label">今日約局數</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="successRate">0%</div>
+                <div class="stat-label">成桌率</div>
+            </div>
+        </div>
+
+        <!-- 通知設定 -->
+        <div class="notification-settings">
+            <h3 class="card-title">📢 通知設定</h3>
+            <div class="form-group">
+                <label>LINE Notify Token</label>
+                <input type="text" id="lineNotifyToken" placeholder="輸入您的LINE Notify Token">
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <label class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 0;">
+                    <input type="checkbox" id="notifyNewSession" checked>
+                    <span>新約局通知</span>
+                </label>
+                <label class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 0;">
+                    <input type="checkbox" id="notifyJoin" checked>
+                    <span>加入約局通知</span>
+                </label>
+                <label class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 0;">
+                    <input type="checkbox" id="notifyFull" checked>
+                    <span>成桌通知</span>
+                </label>
+                <label class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 0;">
+                    <input type="checkbox" id="notifyStart" checked>
+                    <span>開始遊戲通知</span>
+                </label>
+            </div>
+            <button class="submit-btn" onclick="inviteSystem.saveNotificationSettings()">
+                儲存通知設定
+            </button>
+        </div>
+
+        <div class="invite-container">
+            <!-- 創建約局 -->
+            <div class="create-session-card">
+                <h3 class="card-title">📝 創建約局</h3>
+                
+                <!-- 用戶資訊顯示 -->
+                <div id="sessionUserProfile" class="user-profile" style="display: none;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); border-radius: 10px;">
+                        <img id="sessionUserAvatar" class="user-avatar-small" src="" alt="頭貼">
+                        <div>
+                            <div id="sessionUserName" style="color: #ffd700; font-weight: bold; margin-bottom: 5px;"></div>
+                            <button id="sessionLogoutBtn" class="logout-btn" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; cursor: pointer;">登出</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="sessionLoginPrompt" class="login-prompt">
+                    <p style="text-align: center; color: #cccccc; margin-bottom: 20px;">請先登入以創建約局</p>
+                    <div style="text-align: center;">
+                        <a href="line-login.html?ref=invite" class="line-login-btn-small" style="display: inline-block; background: #06C755; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-bottom: 15px;">🟢 使用LINE登入</a>
+                        <br>
+                        <a href="line-login.html?ref=invite" class="manual-input-btn-small" style="display: inline-block; background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%); border: 2px solid #4a4a4a; color: #ffffff; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">⌨️ 手動輸入暱稱</a>
+                    </div>
+                </div>
+                
+                <form id="createSessionForm" style="display: none;">
+                    <div class="form-group" id="hostNameGroup" style="display: none;">
+                        <label>您的暱稱</label>
+                        <input type="text" id="hostName" required placeholder="請輸入您的暱稱">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>約局名稱</label>
+                        <input type="text" id="sessionTitle" required placeholder="例如：今晚8點遊戲局">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>遊戲類型</label>
+                        <select id="gameType" required>
+                            <option value="">請選擇</option>
+                            <option value="card">卡牌遊戲</option>
+                            <option value="board">桌遊</option>
+                            <option value="puzzle">益智遊戲</option>
+                            <option value="strategy">策略遊戲</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>金額設定</label>
+                        <select id="betAmount" required>
+                            <option value="">請選擇</option>
+                            <option value="50">小額 ($50)</option>
+                            <option value="100">中額 ($100)</option>
+                            <option value="200">大額 ($200)</option>
+                            <option value="500">豪華 ($500)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>約局時間</label>
+                        <input type="datetime-local" id="sessionTime" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>遊戲地點</label>
+                        <input type="text" id="location" placeholder="例如：本店A區01桌">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>備註說明</label>
+                        <textarea id="description" rows="3" placeholder="輸入其他需要注意的事項..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">創建約局</button>
+                </form>
+            </div>
+
+            <!-- 約局列表 -->
+            <div class="sessions-list">
+                <h3 class="card-title">📋 約局列表</h3>
+                
+                <!-- 篩選標籤 -->
+                <div class="filter-tabs">
+                    <button class="filter-tab active" onclick="inviteSystem.filterSessions('all')">全部</button>
+                    <button class="filter-tab" onclick="inviteSystem.filterSessions('waiting')">等待中</button>
+                    <button class="filter-tab" onclick="inviteSystem.filterSessions('full')">已滿員</button>
+                    <button class="filter-tab" onclick="inviteSystem.filterSessions('playing')">進行中</button>
+                </div>
+                
+                <div id="sessionsList">
+                    <!-- 動態生成約局列表 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script src="invite-system.js"></script>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINE 登入 - 智能配對系統</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            text-align: center;
+        }
+
+        .login-card {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            border: 1px solid #3a3a3a;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 30px;
+        }
+
+        .login-description {
+            color: #cccccc;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .line-login-btn {
+            display: inline-block;
+            background: #06C755;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .line-login-btn:hover {
+            background: #05A847;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(6, 199, 85, 0.3);
+        }
+
+        .manual-input-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
+            border: 2px solid #4a4a4a;
+            color: #ffffff;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .manual-input-btn:hover {
+            background: linear-gradient(135deg, #4a4a4a 0%, #3a3a3a 100%);
+            border-color: #ffd700;
+            transform: translateY(-2px);
+        }
+
+        .user-info {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            border: 3px solid #ffd700;
+        }
+
+        .user-name {
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .continue-btn {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #000000;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .continue-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .loading {
+            display: none;
+            color: #ffd700;
+            margin-top: 20px;
+        }
+
+        .error-message {
+            color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid #dc3545;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-container">
+            <div class="login-card">
+                <h1 class="login-title">🎯 LINE 登入</h1>
+                <p class="login-description">
+                    使用LINE帳號快速登入，<br>
+                    自動帶入您的暱稱和頭貼
+                </p>
+
+                <div id="loginSection">
+                    <a href="#" id="lineLoginBtn" class="line-login-btn">
+                        <span>🟢 使用LINE登入</span>
+                    </a>
+                    <br>
+                    <a href="#" id="manualInputBtn" class="manual-input-btn">
+                        <span>⌨️ 手動輸入暱稱</span>
+                    </a>
+                </div>
+
+                <div id="userInfo" class="user-info">
+                    <img id="userAvatar" class="user-avatar" src="" alt="用戶頭貼">
+                    <div id="userName" class="user-name"></div>
+                    <div id="userId" style="color: #888888; font-size: 0.9rem;"></div>
+                    <button id="continueBtn" class="continue-btn">繼續使用系統</button>
+                </div>
+
+                <div id="loading" class="loading">
+                    正在處理登入...
+                </div>
+
+                <div id="errorMessage" class="error-message">
+                    登入失敗，請重試
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // LINE Login 設定
+        const LINE_LOGIN_CONFIG = {
+            channelId: 'YOUR_CHANNEL_ID', // 需要替換為實際的Channel ID
+            redirectUri: encodeURIComponent(window.location.href),
+            state: 'login_' + Date.now(),
+            scope: 'openid profile',
+            nonce: 'nonce_' + Date.now()
+        };
+
+        // 檢查URL參數中的授權碼
+        function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            
+            if (code && state && state.startsWith('login_')) {
+                // 有授權碼，處理登入
+                handleLineCallback(code);
+                return true;
+            }
+            return false;
+        }
+
+        // 處理LINE回調
+        async function handleLineCallback(code) {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                // 這裡需要後端API來處理token交換
+                // 目前為演示目的，使用模擬數據
+                const userInfo = await simulateLineLogin(code);
+                
+                if (userInfo) {
+                    displayUserInfo(userInfo);
+                    saveUserInfo(userInfo);
+                } else {
+                    showError();
+                }
+            } catch (error) {
+                console.error('LINE登入錯誤:', error);
+                showError();
+            }
+            
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // 模擬LINE登入（實際需要後端API）
+        async function simulateLineLogin(code) {
+            // 模擬API延遲
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // 模擬返回的用戶資訊
+            return {
+                userId: 'U' + Math.random().toString(36).substr(2, 9),
+                displayName: 'LINE用戶',
+                pictureUrl: 'https://via.placeholder.com/80x80/06C755/FFFFFF?text=LINE',
+                statusMessage: 'Hello!'
+            };
+        }
+
+        // 顯示用戶資訊
+        function displayUserInfo(userInfo) {
+            document.getElementById('userAvatar').src = userInfo.pictureUrl;
+            document.getElementById('userName').textContent = userInfo.displayName;
+            document.getElementById('userId').textContent = 'ID: ' + userInfo.userId;
+            document.getElementById('userInfo').style.display = 'block';
+        }
+
+        // 保存用戶資訊到localStorage
+        function saveUserInfo(userInfo) {
+            localStorage.setItem('lineUserInfo', JSON.stringify(userInfo));
+            localStorage.setItem('loginMethod', 'line');
+        }
+
+        // 顯示錯誤訊息
+        function showError() {
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('loginSection').style.display = 'block';
+        }
+
+        // LINE登入按鈕點擊事件
+        document.getElementById('lineLoginBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const authUrl = `https://access.line.me/oauth2/v2.1/authorize?` +
+                `response_type=code&` +
+                `client_id=${LINE_LOGIN_CONFIG.channelId}&` +
+                `redirect_uri=${LINE_LOGIN_CONFIG.redirectUri}&` +
+                `state=${LINE_LOGIN_CONFIG.state}&` +
+                `scope=${LINE_LOGIN_CONFIG.scope}&` +
+                `nonce=${LINE_LOGIN_CONFIG.nonce}`;
+            
+            window.location.href = authUrl;
+        });
+
+        // 手動輸入按鈕點擊事件
+        document.getElementById('manualInputBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const nickname = prompt('請輸入您的暱稱：');
+            if (nickname && nickname.trim()) {
+                const userInfo = {
+                    userId: 'manual_' + Date.now(),
+                    displayName: nickname.trim(),
+                    pictureUrl: 'https://via.placeholder.com/80x80/6c757d/FFFFFF?text=' + nickname.charAt(0).toUpperCase(),
+                    statusMessage: '手動輸入用戶'
+                };
+                
+                displayUserInfo(userInfo);
+                saveUserInfo(userInfo);
+            }
+        });
+
+        // 繼續使用系統按鈕
+        document.getElementById('continueBtn').addEventListener('click', function() {
+            // 根據來源頁面決定跳轉
+            const referrer = document.referrer;
+            if (referrer.includes('invite-system.html')) {
+                window.location.href = 'invite-system.html';
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        // 頁面載入時檢查URL參數
+        window.addEventListener('load', function() {
+            if (!checkUrlParams()) {
+                // 檢查是否已經登入
+                const savedUserInfo = localStorage.getItem('lineUserInfo');
+                if (savedUserInfo) {
+                    const userInfo = JSON.parse(savedUserInfo);
+                    displayUserInfo(userInfo);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

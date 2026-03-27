@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配對系統</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">� 智能配對系統</h1>
+            <div class="nav-buttons">
+                <button id="playerView" class="nav-btn active">玩家報名</button>
+                <button id="adminView" class="nav-btn">管理後台</button>
+                <button class="nav-btn" onclick="location.href='invite-system.html'">揪牌咖</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- 玩家報名頁面 -->
+            <section id="playerSection" class="section active">
+                <div class="registration-card">
+                    <h2 class="card-title">立即報名</h2>
+                    
+                    <!-- 用戶資訊顯示 -->
+                    <div id="userProfile" class="user-profile" style="display: none;">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); border-radius: 10px;">
+                            <img id="userAvatar" class="user-avatar-small" src="" alt="頭貼">
+                            <div>
+                                <div id="userName" style="color: #ffd700; font-weight: bold; margin-bottom: 5px;"></div>
+                                <button id="logoutBtn" class="logout-btn" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; cursor: pointer;">登出</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="loginPrompt" class="login-prompt">
+                        <p style="text-align: center; color: #cccccc; margin-bottom: 20px;">請先登入以使用報名功能</p>
+                        <div style="text-align: center;">
+                            <a href="line-login.html" class="line-login-btn-small" style="display: inline-block; background: #06C755; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-bottom: 15px;">🟢 使用LINE登入</a>
+                            <br>
+                            <a href="line-login.html" class="manual-input-btn-small" style="display: inline-block; background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%); border: 2px solid #4a4a4a; color: #ffffff; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">⌨️ 手動輸入暱稱</a>
+                        </div>
+                    </div>
+                    
+                    <form id="registrationForm" style="display: none;">
+                        <div class="form-group" id="nicknameGroup" style="display: none;">
+                            <label for="nickname">暱稱</label>
+                            <input type="text" id="nickname" name="nickname" required placeholder="請輸入您的暱稱">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>選擇金額</label>
+                            <div class="amount-options">
+                                <label class="amount-option">
+                                    <input type="radio" name="amount" value="100" required>
+                                    <span class="amount-btn">$100</span>
+                                </label>
+                                <label class="amount-option">
+                                    <input type="radio" name="amount" value="200">
+                                    <span class="amount-btn">$200</span>
+                                </label>
+                                <label class="amount-option">
+                                    <input type="radio" name="amount" value="300">
+                                    <span class="amount-btn">$300</span>
+                                </label>
+                                <label class="amount-option">
+                                    <input type="radio" name="amount" value="500">
+                                    <span class="amount-btn">$500</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="submit-btn">確認報名</button>
+                    </form>
+                </div>
+
+                <div class="current-registrations">
+                    <h3>目前報名狀況</h3>
+                    <div id="registrationList" class="registration-list">
+                        <!-- 動態生成報名列表 -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 管理後台頁面 -->
+            <section id="adminSection" class="section">
+                <div class="admin-card">
+                    <h2 class="card-title">管理後台</h2>
+                    
+                    <div class="admin-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">總報名人數</span>
+                            <span id="totalCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">待開桌</span>
+                            <span id="pendingCount" class="stat-value">0</span>
+                        </div>
+                    </div>
+
+                    <div class="admin-controls">
+                        <button id="createTable" class="admin-btn">手動配對</button>
+                        <button id="clearAll" class="admin-btn danger">清空所有報名</button>
+                        <button id="lineNotifySettings" class="admin-btn settings">LINE Notify 設定</button>
+                    </div>
+
+                    <div class="registrations-management">
+                        <h3>配對名單管理</h3>
+                        <div id="adminRegistrationList" class="admin-registration-list">
+                            <!-- 動態生成管理列表 -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 通知區域 -->
+        <div id="notification" class="notification"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
