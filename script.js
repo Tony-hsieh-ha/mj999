@@ -1,5 +1,5 @@
 // 智能配對系統
-class MahjongRegistrationSystem {
+class RegistrationSystem {
     constructor() {
         this.registrations = [];
         this.tables = [];
@@ -162,13 +162,13 @@ class MahjongRegistrationSystem {
 
     // 處理報名
     handleRegistration() {
-        const nickname = document.getElementById('nickname').value.trim();
+        const nickname = this.currentUser ? this.currentUser.displayName : document.getElementById('nickname').value.trim();
         const amount = document.querySelector('input[name="amount"]:checked');
         const earliestTime = document.getElementById('earliestTime').value;
         const latestTime = document.getElementById('latestTime').value;
 
         if (!nickname) {
-            this.showNotification('請輸入暱稱', 'error');
+            this.showNotification('請先登入', 'error');
             return;
         }
 
@@ -372,7 +372,9 @@ class MahjongRegistrationSystem {
         
         // 在報名列表上方插入確認介面
         const registrationList = document.getElementById('registrationList');
-        registrationList.insertAdjacentHTML('afterbegin', confirmationHtml);
+        if (registrationList) {
+            registrationList.insertAdjacentHTML('afterbegin', confirmationHtml);
+        }
     }
 
     // 渲染確認狀態
@@ -383,8 +385,8 @@ class MahjongRegistrationSystem {
         if (playerConfirmation.status === 'pending' && table.players.some(p => p.id === currentUser?.id)) {
             return `
                 <div class="user-confirmation-buttons" style="display: flex; gap: 10px; justify-content: center;">
-                    <button onclick="registrationSystem.respondToTable(${table.id}, 'agreed')" class="action-btn confirm-btn">✅ 同意</button>
-                    <button onclick="registrationSystem.respondToTable(${table.id}, 'disagreed')" class="action-btn cancel-btn">❌ 不同意</button>
+                    <button onclick="window.registrationSystem.respondToTable(${table.id}, 'agreed')" class="action-btn confirm-btn">✅ 同意</button>
+                    <button onclick="window.registrationSystem.respondToTable(${table.id}, 'disagreed')" class="action-btn cancel-btn">❌ 不同意</button>
                 </div>
             `;
         } else if (playerConfirmation.status !== 'pending') {
@@ -612,7 +614,7 @@ class MahjongRegistrationSystem {
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <span class="table-status ${statusClass}">${statusText}</span>
                         <div class="admin-registration-actions">
-                            <button class="action-btn delete" onclick="mahjongSystem.deleteRegistration(${reg.id})">
+                            <button class="action-btn delete" onclick="window.registrationSystem.deleteRegistration(${reg.id})">
                                 刪除
                             </button>
                         </div>

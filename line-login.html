@@ -170,7 +170,7 @@
         // LINE Login 設定
         const LINE_LOGIN_CONFIG = {
             channelId: '2004473747', // 實際的 Channel ID
-            redirectUri: encodeURIComponent('https://mj999-2168.vercel.app/line-login.html'),
+            redirectUri: encodeURIComponent('https://mj999-2168.vercel.app/index.html'),
             state: 'login_' + Date.now(),
             scope: 'openid profile',
             nonce: 'nonce_' + Date.now()
@@ -225,7 +225,7 @@
                     body: new URLSearchParams({
                         'grant_type': 'authorization_code',
                         'code': code,
-                        'redirect_uri': 'https://mj999-2168.vercel.app/line-login.html',
+                        'redirect_uri': 'https://mj999-2168.vercel.app/index.html',
                         'client_id': '2004473747',
                         'client_secret': 'a5ef8b23a930a8320c273f21badc78c2'
                     })
@@ -300,15 +300,8 @@
 
         // 繼續使用系統按鈕
         document.getElementById('continueBtn').addEventListener('click', function() {
-            // 根據來源頁面決定跳轉
-            const urlParams = new URLSearchParams(window.location.search);
-            const ref = urlParams.get('ref');
-            
-            if (ref === 'invite') {
-                window.location.href = 'https://mj999-2168.vercel.app/invite-system.html';
-            } else {
-                window.location.href = 'https://mj999-2168.vercel.app/index.html';
-            }
+            // 直接跳轉到 index.html
+            window.location.href = 'https://mj999-2168.vercel.app/index.html';
         });
 
         // 頁面載入時檢查URL參數
