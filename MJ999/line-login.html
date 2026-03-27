@@ -173,8 +173,8 @@
     <script>
         // LINE Login 設定
         const LINE_LOGIN_CONFIG = {
-            channelId: 'YOUR_CHANNEL_ID', // 需要替換為實際的Channel ID
-            redirectUri: encodeURIComponent(window.location.href),
+            channelId: '2004473747', // 實際的 Channel ID
+            redirectUri: encodeURIComponent('https://mj999-2168.vercel.app/line-login.html'),
             state: 'login_' + Date.now(),
             scope: 'openid profile',
             nonce: 'nonce_' + Date.now()
@@ -200,9 +200,8 @@
             document.getElementById('loading').style.display = 'block';
             
             try {
-                // 這裡需要後端API來處理token交換
-                // 目前為演示目的，使用模擬數據
-                const userInfo = await simulateLineLogin(code);
+                // 實際的 LINE Login API 調用
+                const userInfo = await getLineUserInfo(code);
                 
                 if (userInfo) {
                     displayUserInfo(userInfo);
@@ -218,18 +217,54 @@
             document.getElementById('loading').style.display = 'none';
         }
 
-        // 模擬LINE登入（實際需要後端API）
-        async function simulateLineLogin(code) {
-            // 模擬API延遲
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // 模擬返回的用戶資訊
-            return {
-                userId: 'U' + Math.random().toString(36).substr(2, 9),
-                displayName: 'LINE用戶',
-                pictureUrl: 'https://via.placeholder.com/80x80/06C755/FFFFFF?text=LINE',
-                statusMessage: 'Hello!'
-            };
+        // 實際 LINE Login API 調用
+        async function getLineUserInfo(code) {
+            try {
+                // 使用授權碼獲取 access token
+                const tokenResponse = await fetch('https://api.line.me/oauth2/v2.1/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'grant_type': 'authorization_code',
+                        'code': code,
+                        'redirect_uri': 'https://mj999-2168.vercel.app/line-login.html',
+                        'client_id': '2004473747',
+                        'client_secret': 'a5ef8b23a930a8320c273f21badc78c2'
+                    })
+                });
+                
+                if (!tokenResponse.ok) {
+                    throw new Error('Token 交換失敗');
+                }
+                
+                const tokenData = await tokenResponse.json();
+                
+                // 使用 access token 獲取用戶資訊
+                const profileResponse = await fetch('https://api.line.me/v2/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${tokenData.access_token}`
+                    }
+                });
+                
+                if (!profileResponse.ok) {
+                    throw new Error('獲取用戶資訊失敗');
+                }
+                
+                const profileData = await profileResponse.json();
+                
+                return {
+                    userId: profileData.userId,
+                    displayName: profileData.displayName,
+                    pictureUrl: profileData.pictureUrl,
+                    statusMessage: profileData.statusMessage || ''
+                };
+                
+            } catch (error) {
+                console.error('LINE API 調用錯誤:', error);
+                return null;
+            }
         }
 
         // 顯示用戶資訊
@@ -288,11 +323,13 @@
         // 繼續使用系統按鈕
         document.getElementById('continueBtn').addEventListener('click', function() {
             // 根據來源頁面決定跳轉
-            const referrer = document.referrer;
-            if (referrer.includes('invite-system.html')) {
-                window.location.href = 'invite-system.html';
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+            
+            if (ref === 'invite') {
+                window.location.href = 'https://mj999-2168.vercel.app/invite-system.html';
             } else {
-                window.location.href = 'index.html';
+                window.location.href = 'https://mj999-2168.vercel.app/index.html';
             }
         });
 
