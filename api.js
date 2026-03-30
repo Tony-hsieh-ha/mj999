@@ -496,7 +496,7 @@ class APIRoutes {
                     redirect_uri: LINE_CONFIG.redirectUri,
                     client_id: LINE_CONFIG.clientId,
                     client_secret: LINE_CONFIG.clientSecret
-                })
+                }).toString()
             });
             
             if (!tokenResponse.ok) {

@@ -104,7 +104,7 @@
                     channelId: LINE_CONFIG.channelId,
                     redirectUri: LINE_CONFIG.redirectUri,
                     scope: LINE_CONFIG.scope,
-                    authUrl: `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CONFIG.channelId}&redirect_uri=${LINE_CONFIG.redirectUri}&state=test_${Date.now()}&scope=${LINE_CONFIG.scope}&nonce=${LINE_CONFIG.nonce}`
+                    authUrl: `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CONFIG.channelId}&redirect_uri=${encodeURIComponent(LINE_CONFIG.redirectUri)}&state=test_${Date.now()}&scope=${LINE_CONFIG.scope}&nonce=${LINE_CONFIG.nonce}`
                 };
                 
                 showCode('configResult', JSON.stringify(config, null, 2), 'success');
@@ -166,7 +166,7 @@
         // 4. 手動測試登入
         function testManualLogin() {
             const state = 'test_' + Date.now();
-            const authUrl = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CONFIG.channelId}&redirect_uri=${LINE_CONFIG.redirectUri}&state=${state}&scope=${LINE_CONFIG.scope}&nonce=${LINE_CONFIG.nonce}`;
+            const authUrl = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CONFIG.channelId}&redirect_uri=${encodeURIComponent(LINE_CONFIG.redirectUri)}&state=${state}&scope=${LINE_CONFIG.scope}&nonce=${LINE_CONFIG.nonce}`;
             
             showResult('loginResult', `正在跳轉到 LINE 授權頁面...<br><a href="${authUrl}" target="_blank">${authUrl}</a>`, 'info');
             
