@@ -471,6 +471,63 @@ class APIRoutes {
         
         return stats;
     }
+
+    // 處理 LINE Token 交換
+    async handleLineToken(req) {
+        try {
+            const { code, state } = await req.json();
+            
+            // LINE Token 交換設定
+            const LINE_CONFIG = {
+                clientId: '2004473747',
+                clientSecret: process.env?.LINE_CLIENT_SECRET || '',
+                redirectUri: 'https://mj999-2168.vercel.app/' // 與 LINE 後台完全一致
+            };
+            
+            // 向 LINE 請求 access token
+            const tokenResponse = await fetch('https://api.line.me/oauth2/v2.1/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    grant_type: 'authorization_code',
+                    code: code,
+                    redirect_uri: LINE_CONFIG.redirectUri,
+                    client_id: LINE_CONFIG.clientId,
+                    client_secret: LINE_CONFIG.clientSecret
+                })
+            });
+            
+            if (!tokenResponse.ok) {
+                const errorText = await tokenResponse.text();
+                console.error('LINE Token 交換失敗:', errorText);
+                return new Response(JSON.stringify({
+                    error: 'Token exchange failed',
+                    message: errorText
+                }), {
+                    status: 400,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+            
+            const tokenData = await tokenResponse.json();
+            
+            return new Response(JSON.stringify(tokenData), {
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+        } catch (error) {
+            console.error('處理 LINE Token 時發生錯誤:', error);
+            return new Response(JSON.stringify({
+                error: 'Internal server error',
+                message: error.message
+            }), {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+    }
 }
 
 // Vercel Serverless Function 路由器
@@ -484,6 +541,9 @@ export default async function handler(req) {
         // 公開路由
         'GET /api/registrations': apiRoutes.secureAPI.wrapPublicRoute(() => apiRoutes.getRegistrations(req)),
         'GET /api/stats': apiRoutes.secureAPI.wrapPublicRoute(() => apiRoutes.getStats(req)),
+        
+        // LINE 登入路由
+        'POST /api/line/token': apiRoutes.secureAPI.wrapPublicRoute(() => apiRoutes.handleLineToken(req)),
         
         // 管理員路由
         'POST /api/registrations': apiRoutes.secureAPI.wrapAdminRoute(() => apiRoutes.addRegistration(req)),
