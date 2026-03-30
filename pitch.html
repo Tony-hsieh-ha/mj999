@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MJ999 麻將配桌助手 - 讓你的店自動揪滿桌！</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: #ffffff;
+            font-family: 'Microsoft JhengHei', sans-serif;
+            overflow-x: hidden;
+        }
+        
+        .full-page-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .neon-text {
+            font-size: 4rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff006e, #ffbe0b, #06ffa5, #3a86ff, #8338ec);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: neonGlow 3s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(131, 56, 236, 0.5);
+        }
+        
+        @keyframes neonGlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .floating-icon {
+            position: absolute;
+            font-size: 2rem;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(5deg); }
+            75% { transform: translateY(20px) rotate(-5deg); }
+        }
+        
+        .content-card {
+            background: linear-gradient(135deg, rgba(131, 56, 236, 0.1) 0%, rgba(58, 134, 255, 0.1) 100%);
+            border: 2px solid rgba(131, 56, 236, 0.3);
+            border-radius: 20px;
+            padding: 3rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            max-width: 600px;
+            margin: 2rem;
+        }
+        
+        .cta-button {
+            background: linear-gradient(45deg, #ff006e, #8338ec);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(131, 56, 236, 0.3);
+            text-decoration: none;
+            display: inline-block;
+            margin: 1rem 0.5rem;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(131, 56, 236, 0.5);
+            background: linear-gradient(45deg, #ff006e, #a855f7);
+        }
+        
+        .feature-list {
+            list-style: none;
+            margin: 2rem 0;
+        }
+        
+        .feature-item {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.1) 100%);
+            border-left: 4px solid #06ffa5;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-item:hover {
+            transform: translateX(10px);
+            border-left-color: #ffbe0b;
+            box-shadow: 0 5px 20px rgba(6, 255, 165, 0.3);
+        }
+        
+        .demo-window {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            border: 2px solid #3a86ff;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem auto;
+            max-width: 800px;
+            box-shadow: 0 20px 60px rgba(58, 134, 255, 0.3);
+        }
+        
+        .scroll-indicator {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s ease-in-out infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 第一頁：封面 -->
+    <section class="full-page-section" id="page1">
+        <div class="floating-elements">
+            <div class="floating-icon" style="top: 10%; left: 10%;">🎰</div>
+            <div class="floating-icon" style="top: 20%; right: 15%;">🀄</div>
+            <div class="floating-icon" style="bottom: 20%; left: 20%;">💰</div>
+            <div class="floating-icon" style="bottom: 30%; right: 10%;">🔥</div>
+        </div>
+        <div class="text-center">
+            <h1 class="neon-text">MJ999</h1>
+            <h2 class="text-3xl font-bold mt-8 mb-4" style="color: #ffd700;">麻將配桌助手</h2>
+            <p class="text-xl mb-8">讓你的店自動揪滿桌！</p>
+            <a href="#page2" class="cta-button">了解痛點 →</a>
+        </div>
+        <div class="scroll-indicator text-2xl">⬇️ 滑動繼續</div>
+    </section>
+
+    <!-- 第二頁：痛點 -->
+    <section class="full-page-section" id="page2">
+        <div class="content-card">
+            <h2 class="text-3xl font-bold mb-6" style="color: #ff006e;">老闆，你還在辛苦回 LINE 嗎？</h2>
+            <p class="text-lg mb-6">每天面對這些問題，讓你焦頭爛額：</p>
+            
+            <ul class="feature-list">
+                <li class="feature-item">📱 訊息洗版 - 客人放鳥找不到人</li>
+                <li class="feature-item">🔥 現場冷清 - 桌子湊不滿</li>
+                <li class="feature-item">⏰ 時間浪費 - 手動配對效率低</li>
+                <li class="feature-item">💸 客訴處理 - 爭議吵雜影響心情</li>
+                <li class="feature-item">📊 數據混亂 - 不知道生意好壞</li>
+            </ul>
+            
+            <div class="text-center">
+                <a href="#page3" class="cta-button">看看解決方案 →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 第三頁：核心功能 -->
+    <section class="full-page-section" id="page3">
+        <div class="content-card">
+            <h2 class="text-4xl font-bold mb-8" style="color: #06ffa5; text-shadow: 0 0 20px rgba(6, 255, 165, 0.5);">
+                🎯 明星三缺一遊戲大廳
+            </h2>
+            
+            <div class="space-y-6">
+                <div class="feature-item">
+                    <h3 class="text-2xl font-bold mb-3" style="color: #ffbe0b;">三缺一自動紅色呼吸燈閃爍</h3>
+                    <p>湊滿3人時，全場紅燈閃爍 + LINE 自動揪團</p>
+                </div>
+                
+                <div class="feature-item">
+                    <h3 class="text-2xl font-bold mb-3" style="color: #3a86ff;">LINE Notify 一鍵全場廣播</h3>
+                    <p>老闆一鍵發送優惠訊息，所有玩家立即收到</p>
+                </div>
+                
+                <div class="feature-item">
+                    <h3 class="text-2xl font-bold mb-3" style="color: #ffd700;">即時在線人數統計</h3>
+                    <p>熱度指數顯示，讓玩家感覺這裡很熱鬧</p>
+                </div>
+                
+                <div class="feature-item">
+                    <h3 class="text-2xl font-bold mb-3" style="color: #8338ec;">玩家狀態勳章系統</h3>
+                    <p>火苗🔥、發財💰勳章，增加玩家黏著度</p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-8">
+                <a href="#page4" class="cta-button">立即體驗 →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 第四頁：實戰展示 -->
+    <section class="full-page-section" id="page4">
+        <div class="demo-window">
+            <h2 class="text-2xl font-bold mb-6 text-center" style="color: #06ffa5;">MJ999 實際操作樣子</h2>
+            
+            <div class="bg-black bg-opacity-50 rounded-lg p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4" style="color: #ffd700;">🎰 遊戲大廳介面</h3>
+                <p class="mb-4">深黑背景 + 螢光色文字，房間列表一目了然</p>
+                <div class="bg-gray-800 rounded p-4 text-center">
+                    <div class="text-green-400 font-bold">明星桌 50/20 - 3缺1 🔴</div>
+                    <div class="text-yellow-400 font-bold">新手桌 30/10 - 2/4</div>
+                    <div class="text-blue-400 font-bold">高手桌 100/20 - 遊戲中 🎮</div>
+                </div>
+            </div>
+            
+            <div class="bg-black bg-opacity-50 rounded-lg p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4" style="color: #ff006e;">📡 即時事件跑馬燈</h3>
+                <p class="mb-4">「15:30，第2桌已開打！」自動滾動顯示</p>
+                <div class="bg-red-900 rounded p-3 text-center text-yellow-300">
+                    <div class="animate-pulse">🎯 玩家A 加入了明星桌！</div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-8">
+                <a href="#page5" class="cta-button">看看優惠 →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 第五頁：承諾 -->
+    <section class="full-page-section" id="page5">
+        <div class="content-card">
+            <h2 class="text-4xl font-bold mb-8 text-center" style="color: #ffd700; text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);">
+                🎉 現在免費試用！
+            </h2>
+            
+            <div class="text-center space-y-6">
+                <div class="text-2xl mb-4">1分鐘上手</div>
+                <div class="text-xl mb-4">讓二林、溪湖的牌友都來你的店</div>
+                <div class="text-lg mb-6">零風險、零成本、立即開始賺錢</div>
+                
+                <div class="bg-gradient-to-r from-green-600 to-blue-600 rounded-lg p-6">
+                    <h3 class="text-2xl font-bold mb-4">🚀 立即開始體驗</h3>
+                    <button onclick="window.location.href='index.html'" class="bg-white text-black px-8 py-4 rounded-lg font-bold text-xl hover:scale-105 transition-transform">
+                        開始使用 MJ999
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // 全螢幕捲動效果
+        let currentSection = 1;
+        const sections = ['page1', 'page2', 'page3', 'page4', 'page5'];
+        
+        document.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            
+            if (e.deltaY < 0) {
+                // 向上滾動
+                if (currentSection > 1) {
+                    currentSection--;
+                    scrollToSection(currentSection);
+                }
+            } else {
+                // 向下滾動
+                if (currentSection < 5) {
+                    currentSection++;
+                    scrollToSection(currentSection);
+                }
+            }
+        });
+        
+        function scrollToSection(sectionNum) {
+            const section = document.getElementById(`page${sectionNum}`);
+            section.scrollIntoView({ behavior: 'smooth' });
+            
+            // 隱藏其他頁面
+            sections.forEach((id, index) => {
+                const el = document.getElementById(id);
+                el.style.display = index + 1 === sectionNum ? 'flex' : 'none';
+            });
+        }
+        
+        // 鍵盤導航
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' && currentSection < 5) {
+                currentSection++;
+                scrollToSection(currentSection);
+            } else if (e.key === 'ArrowUp' && currentSection > 1) {
+                currentSection--;
+                scrollToSection(currentSection);
+            }
+        });
+        
+        // 初始化顯示第一頁
+        sections.forEach((id, index) => {
+            const el = document.getElementById(id);
+            el.style.display = index + 1 === 1 ? 'flex' : 'none';
+        });
+    </script>
+</body>
+</html>

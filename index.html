@@ -3,150 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>配對系統</title>
+    <title>智能配對系統 - 前台</title>
     <link rel="stylesheet" href="style.css">
     <script src="mock-api.js"></script>
 </head>
 <body>
     <div class="container">
         <header class="header">
-            <h1 class="title">  智能配對系統</h1>
+            <h1 class="title">🎯 智能配對系統</h1>
+            
+            <!-- 霓虹燈跑馬燈 -->
+            <div class="neon-ticker" id="neonTicker">
+                <div class="ticker-content" id="tickerContent">
+                    <span class="ticker-text">🎰 歡迎來到 MJ999 遊戲大廳 🎰</span>
+                </div>
+            </div>
+            
             <div class="nav-buttons">
-                <button id="playerView" class="nav-btn active">玩家報名</button>
-                <button id="adminView" class="nav-btn">管理後台</button>
-                <button class="nav-btn" onclick="location.href='https://mj999-2168.vercel.app/invite-system.html'">配對約局</button>
+                <button id="playerView" class="nav-btn active">配對狀態</button>
+                <button id="statsView" class="nav-btn">統計資訊</button>
+                <button class="nav-btn admin-login-btn" onclick="location.href='admin.html'">🔐 管理</button>
             </div>
         </header>
 
         <main>
-            <!-- 玩家報名頁面 -->
+            <!-- 遊戲大廳頁面 -->
             <section id="playerSection" class="section active">
-                <div class="registration-card">
-                    <h2 class="card-title">立即報名</h2>
-                    
-                    <!-- 用戶資訊顯示 -->
-                    <div id="userProfile" class="user-profile" style="display: none;">
-                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); border-radius: 10px;">
-                            <img id="userAvatar" class="user-avatar-small" src="" alt="頭貼">
-                            <div>
-                                <div id="userName" style="color: #ffd700; font-weight: bold; margin-bottom: 5px;"></div>
-                                <button id="logoutBtn" class="logout-btn" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; cursor: pointer;">登出</button>
-                            </div>
-                        </div>
+                <div class="lobby-header">
+                    <h1 class="lobby-title">
+                        <span class="title-icon">🎰</span>
+                        MJ999 遊戲大廳
+                    </h1>
+                    <div class="user-info" id="userInfo">
+                        <!-- 用戶資訊 -->
                     </div>
-                    
-                    <div id="loginPrompt" class="login-prompt">
-                        <p style="text-align: center; color: #cccccc; margin-bottom: 20px;">請先登入以使用報名功能</p>
-                        <div style="text-align: center;">
-                            <a href="https://mj999-2168.vercel.app/line-login.html" class="line-login-btn-small" style="display: inline-block; background: #06C755; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-bottom: 15px;">🟢 使用LINE登入</a>
-                        </div>
-                    </div>
-                    
-                    <form id="registrationForm" style="display: none;">
-                        <div class="form-group" id="nicknameGroup" style="display: none;">
-                            <label for="nickname">暱稱</label>
-                            <input type="text" id="nickname" name="nickname" required placeholder="請輸入您的暱稱">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>選擇金額</label>
-                            <div class="amount-options">
-                                <label class="amount-option">
-                                    <input type="radio" name="amount" value="30/10" required>
-                                    <span class="amount-btn">$30/10</span>
-                                </label>
-                                <label class="amount-option">
-                                    <input type="radio" name="amount" value="60/20" required>
-                                    <span class="amount-btn">$60/20</span>
-                                </label>
-                                <label class="amount-option">
-                                    <input type="radio" name="amount" value="100/20" required>
-                                    <span class="amount-btn">$100/20</span>
-                                </label>
-                                <label class="amount-option">
-                                    <input type="radio" name="amount" value="200/50" required>
-                                    <span class="amount-btn">$200/50</span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>希望開打時間</label>
-                            <div class="time-range-selector">
-                                <div class="time-input-group">
-                                    <label for="earliestTime">最早可開打時間</label>
-                                    <select id="earliestTime" required>
-                                        <!-- 動態生成時間選項 -->
-                                    </select>
-                                </div>
-                                <div class="time-input-group">
-                                    <label for="latestTime">最晚可開打時間</label>
-                                    <select id="latestTime" required>
-                                        <!-- 動態生成時間選項 -->
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="submit-btn">確認報名</button>
-                    </form>
                 </div>
 
-                <div class="current-registrations">
-                    <h3>目前報名狀況</h3>
-                    
-                    <!-- 金額統計 -->
-                    <div class="amount-stats">
-                        <div class="stat-row">
-                            <span class="amount-label">30/10:</span>
-                            <span class="amount-count" id="count-30-10">0人</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="amount-label">60/20:</span>
-                            <span class="amount-count" id="count-60-20">0人</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="amount-label">100/20:</span>
-                            <span class="amount-count" id="count-100-20">0人</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="amount-label">200/50:</span>
-                            <span class="amount-count" id="count-200-50">0人</span>
+                <div class="room-list-container">
+                    <!-- 即時事件跑馬燈 -->
+                    <div class="event-ticker" id="eventTicker">
+                        <div class="event-ticker-content" id="eventTickerContent">
+                            <span class="event-text">🎰 歡迎來到 MJ999 遊戲大廳 🎰</span>
                         </div>
                     </div>
                     
-                    <div id="registrationList" class="registration-list">
-                        <!-- 動態生成報名列表 -->
+                    <div class="room-list-header">
+                        <h2 class="room-list-title">🎲 房間列表</h2>
+                        <div class="room-stats">
+                            <span class="stat-item">總房間: <span id="totalRooms">0</span></span>
+                            <span class="stat-item">等待中: <span id="waitingRooms">0</span></span>
+                            <span class="stat-item">遊戲中: <span id="playingRooms">0</span></span>
+                        </div>
+                        
+                        <!-- 即時統計 -->
+                        <div class="live-stats">
+                            <div class="live-stat-item">
+                                <span class="live-icon">👥</span>
+                                <span class="live-label">在線人數</span>
+                                <span class="live-value" id="onlineCount">0</span>
+                            </div>
+                            <div class="live-stat-item">
+                                <span class="live-icon">🎮</span>
+                                <span class="live-label">今日開桌</span>
+                                <span class="live-value" id="todayTables">0</span>
+                            </div>
+                            <div class="live-stat-item">
+                                <span class="live-icon">🔥</span>
+                                <span class="live-label">熱度指數</span>
+                                <span class="live-value" id="heatIndex">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="roomList" class="room-list">
+                        <!-- 動態生成房間列表 -->
+                    </div>
+                </div>
+
+                <!-- 3 缺 1 紅色閃爍提示 -->
+                <div id="nearCompleteAlert" class="near-complete-alert" style="display: none;">
+                    <div class="alert-content">
+                        <div class="alert-icon">🔴</div>
+                        <div class="alert-text">
+                            <h3>3 缺 1！</h3>
+                            <p id="alertMessage">目前有一桌 3 缺 1！想打的快來報名！</p>
+                        </div>
+                        <div class="alert-pulse"></div>
+                    </div>
+                </div>
+
+                <!-- 即時時鐘 -->
+                <div class="realtime-clock">
+                    <div class="clock-display" id="clockDisplay">
+                        <div class="time">00:00:00</div>
+                        <div class="date">2024-01-01</div>
                     </div>
                 </div>
             </section>
 
-            <!-- 管理後台頁面 -->
-            <section id="adminSection" class="section">
-                <div class="admin-card">
-                    <h2 class="card-title">管理後台</h2>
+            <!-- 報名表單頁面 -->
+            <section id="registrationSection" class="section">
+                <div class="registration-card">
+                    <h2 class="card-title">📝 報名表單</h2>
                     
-                    <div class="admin-stats">
+                    <div class="form-group">
+                        <label>LINE 暱稱</label>
+                        <input type="text" id="nickname" placeholder="請輸入您的 LINE 暱稱">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>選擇金額</label>
+                        <div class="amount-options">
+                            <label class="amount-option">
+                                <input type="radio" name="amount" value="30/10">
+                                <span class="amount-btn">$30/10</span>
+                            </label>
+                            <label class="amount-option">
+                                <input type="radio" name="amount" value="60/20">
+                                <span class="amount-btn">$60/20</span>
+                            </label>
+                            <label class="amount-option">
+                                <input type="radio" name="amount" value="100/20">
+                                <span class="amount-btn">$100/20</span>
+                            </label>
+                            <label class="amount-option">
+                                <input type="radio" name="amount" value="200/50">
+                                <span class="amount-btn">$200/50</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 預計開打時間 -->
+                    <div class="time-selection">
+                        <h3>預計開打時間</h3>
+                        <div class="time-options">
+                            <label class="time-option">
+                                <input type="radio" name="startTime" value="滿開" checked>
+                                <div class="time-btn">🎯 湊滿即開</div>
+                            </label>
+                            <label class="time-option">
+                                <input type="radio" name="startTime" value="30分鐘內">
+                                <div class="time-btn">⚡ 30分鐘內</div>
+                            </label>
+                            <label class="time-option">
+                                <input type="radio" name="startTime" value="1小時內">
+                                <div class="time-btn">🕐 1小時內</div>
+                            </label>
+                        </div>
+                        
+                        <div class="time-slots">
+                            <h4>具體時段</h4>
+                            <div class="time-grid">
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="14:00">
+                                    <div class="time-slot-btn">14:00</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="14:30">
+                                    <div class="time-slot-btn">14:30</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="15:00">
+                                    <div class="time-slot-btn">15:00</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="15:30">
+                                    <div class="time-slot-btn">15:30</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="16:00">
+                                    <div class="time-slot-btn">16:00</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="16:30">
+                                    <div class="time-slot-btn">16:30</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="17:00">
+                                    <div class="time-slot-btn">17:00</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="17:30">
+                                    <div class="time-slot-btn">17:30</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="18:00">
+                                    <div class="time-slot-btn">18:00</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="18:30">
+                                    <div class="time-slot-btn">18:30</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="submit-btn" onclick="window.frontendSystem.submitRegistration()">
+                        確認報名
+                    </button>
+                </div>
+            </section>
+
+            <!-- 統計資訊頁面 -->
+            <section id="statsSection" class="section">
+                <div class="stats-card">
+                    <h2 class="card-title">📊 統計資訊</h2>
+                    
+                    <div class="stats-grid">
                         <div class="stat-item">
                             <span class="stat-label">總報名人數</span>
                             <span id="totalCount" class="stat-value">0</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">待開桌</span>
+                            <span class="stat-label">等待配對</span>
                             <span id="pendingCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">已配對</span>
+                            <span id="matchedCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">配對中</span>
+                            <span id="playingCount" class="stat-value">0</span>
                         </div>
                     </div>
 
-                    <div class="admin-controls">
-                        <button id="createTable" class="admin-btn">手動配對</button>
-                        <button id="clearAll" class="admin-btn danger">清空所有報名</button>
-                        <button id="lineNotifySettings" class="admin-btn settings">LINE Notify 設定</button>
-                    </div>
-
-                    <div class="registrations-management">
-                        <h3>配對名單管理</h3>
-                        <div id="adminRegistrationList" class="admin-registration-list">
-                            <!-- 動態生成管理列表 -->
+                    <div class="chart-container">
+                        <h3>金額分佈圖</h3>
+                        <div id="amountChart" class="chart">
+                            <!-- 動態生成圖表 -->
                         </div>
                     </div>
                 </div>
@@ -157,6 +242,44 @@
         <div id="notification" class="notification"></div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="frontend.js"></script>
+    <script>
+        // 立即執行登入檢查（在 DOM 載入前）
+        (function() {
+            // 檢查是否已經有登入狀態
+            const userInfo = localStorage.getItem('lineUserInfo');
+            const loginMethod = localStorage.getItem('loginMethod');
+            
+            // 檢查 URL 參數中的授權碼
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            
+            // 如果未登入且沒有授權碼，立即跳轉到登入頁面
+            if (!userInfo || loginMethod !== 'line') {
+                if (!code || !state) {
+                    window.location.href = 'line-login.html';
+                    return;
+                }
+            }
+            
+            // 如果有授權碼，等待 frontend.js 處理
+            // 顯示載入畫面
+            document.addEventListener('DOMContentLoaded', function() {
+                if (code && state) {
+                    document.body.innerHTML = `
+                        <div class="loading-screen">
+                            <div class="loading-container">
+                                <div class="neon-loading">
+                                    <div class="loading-spinner"></div>
+                                    <div class="loading-text">正在登入中...</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
