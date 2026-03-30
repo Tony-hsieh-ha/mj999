@@ -4,10 +4,21 @@ class FrontendSystem {
         this.registrations = [];
         this.tables = [];
         this.currentUser = null;
+        this.isLoggedIn = false;
         this.init();
     }
 
-    init() {
+    async init() {
+        // 強制檢查登入狀態
+        await this.checkLoginStatus();
+        
+        // 如果未登入，立即跳轉到登入頁面
+        if (!this.isLoggedIn) {
+            this.redirectToLogin();
+            return;
+        }
+        
+        // 只有在登入後才初始化系統
         this.loadData();
         this.loadUserInfo();
         this.setupEventListeners();
@@ -16,6 +27,131 @@ class FrontendSystem {
         this.startClock();
         this.startWaitingTimer();
         this.startAutoSync(); // 新增自動同步
+    }
+    
+    // 檢查登入狀態
+    async checkLoginStatus() {
+        try {
+            // 檢查 localStorage 中的用戶資訊
+            const userInfo = localStorage.getItem('lineUserInfo');
+            const loginMethod = localStorage.getItem('loginMethod');
+            
+            if (userInfo && loginMethod === 'line') {
+                const user = JSON.parse(userInfo);
+                
+                // 驗證用戶資料完整性
+                if (user.userId && user.displayName) {
+                    this.currentUser = user;
+                    this.isLoggedIn = true;
+                    console.log('用戶已登入:', user.displayName);
+                    return;
+                }
+            }
+            
+            // 檢查 URL 參數中的授權碼（從 LINE 登入回來）
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            
+            if (code && state) {
+                await this.handleLineCallback(code, state);
+                return;
+            }
+            
+            // 未登入狀態
+            this.isLoggedIn = false;
+            console.log('用戶未登入');
+            
+        } catch (error) {
+            console.error('檢查登入狀態時發生錯誤:', error);
+            this.isLoggedIn = false;
+        }
+    }
+    
+    // 處理 LINE 登入回調
+    async handleLineCallback(code, state) {
+        try {
+            // 顯示載入畫面
+            this.showLoadingScreen();
+            
+            // 獲取 access token
+            const tokenResponse = await fetch('/api/line/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code, state })
+            });
+            
+            if (!tokenResponse.ok) {
+                throw new Error('獲取 token 失敗');
+            }
+            
+            const tokenData = await tokenResponse.json();
+            
+            // 獲取用戶資料
+            const profileResponse = await fetch('https://api.line.me/v2/profile', {
+                headers: {
+                    'Authorization': `Bearer ${tokenData.access_token}`
+                }
+            });
+            
+            if (!profileResponse.ok) {
+                throw new Error('獲取用戶資料失敗');
+            }
+            
+            const profileData = await profileResponse.json();
+            
+            // 保存用戶資料
+            this.currentUser = {
+                userId: profileData.userId,
+                displayName: profileData.displayName,
+                pictureUrl: profileData.pictureUrl,
+                statusMessage: profileData.statusMessage || ''
+            };
+            
+            localStorage.setItem('lineUserInfo', JSON.stringify(this.currentUser));
+            localStorage.setItem('loginMethod', 'line');
+            
+            this.isLoggedIn = true;
+            
+            // 清理 URL 參數
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            // 初始化系統
+            this.loadData();
+            this.loadUserInfo();
+            this.setupEventListeners();
+            this.updateUI();
+            this.startAutoRefresh();
+            this.startClock();
+            this.startWaitingTimer();
+            this.startAutoSync(); // 新增自動同步
+            
+        } catch (error) {
+            console.error('處理 LINE 登入回調時發生錯誤:', error);
+            this.redirectToLogin();
+        }
+    }
+    
+    // 跳轉到登入頁面
+    redirectToLogin() {
+        const loginUrl = 'line-login.html';
+        window.location.href = loginUrl;
+    }
+    
+    // 顯示載入畫面
+    showLoadingScreen() {
+        document.body.innerHTML = `
+            <div class="loading-screen">
+                <div class="loading-container">
+                    <div class="neon-loading">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">正在登入中...</div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     // 用戶管理

@@ -40,12 +40,38 @@
                 </div>
 
                 <div class="room-list-container">
+                    <!-- 即時事件跑馬燈 -->
+                    <div class="event-ticker" id="eventTicker">
+                        <div class="event-ticker-content" id="eventTickerContent">
+                            <span class="event-text">🎰 歡迎來到 MJ999 遊戲大廳 🎰</span>
+                        </div>
+                    </div>
+                    
                     <div class="room-list-header">
                         <h2 class="room-list-title">🎲 房間列表</h2>
                         <div class="room-stats">
                             <span class="stat-item">總房間: <span id="totalRooms">0</span></span>
                             <span class="stat-item">等待中: <span id="waitingRooms">0</span></span>
                             <span class="stat-item">遊戲中: <span id="playingRooms">0</span></span>
+                        </div>
+                        
+                        <!-- 即時統計 -->
+                        <div class="live-stats">
+                            <div class="live-stat-item">
+                                <span class="live-icon">👥</span>
+                                <span class="live-label">在線人數</span>
+                                <span class="live-value" id="onlineCount">0</span>
+                            </div>
+                            <div class="live-stat-item">
+                                <span class="live-icon">🎮</span>
+                                <span class="live-label">今日開桌</span>
+                                <span class="live-value" id="todayTables">0</span>
+                            </div>
+                            <div class="live-stat-item">
+                                <span class="live-icon">🔥</span>
+                                <span class="live-label">熱度指數</span>
+                                <span class="live-value" id="heatIndex">0</span>
+                            </div>
                         </div>
                     </div>
                     
@@ -74,72 +100,107 @@
                     </div>
                 </div>
             </section>
-                        
-                        <div class="form-group">
-                            <label>選擇金額</label>
-                            <div class="amount-options">
-                                <label class="amount-option">
-                                    <input type="radio" name="amount" value="30/10" disabled>
-                                    <span class="amount-btn">$30/10</span>
-                                </label>
-                                <label class="amount-option">
-                                    <input type="radio" name="amount" value="60/20" disabled>
-                                    <span class="amount-btn">$60/20</span>
-                                </label>
-                                <label class="amount-option">
-                                    <input type="radio" name="amount" value="100/20" disabled>
-                                    <span class="amount-btn">$100/20</span>
-                                </label>
-                                <label class="amount-option">
-                                    <input type="radio" name="amount" value="200/50" disabled>
-                                    <span class="amount-btn">$200/50</span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>希望開打時間</label>
-                            <div class="time-range-selector">
-                                <div class="time-input-group">
-                                    <label for="earliestTime">最早可開打時間</label>
-                                    <select id="earliestTime" disabled>
-                                        <!-- 動態生成時間選項 -->
-                                    </select>
-                </div>
 
-                <div class="room-list-container">
-                    <div class="room-list-header">
-                        <h2 class="room-list-title">🎲 房間列表</h2>
-                        <div class="room-stats">
-                            <span class="stat-item">總房間: <span id="totalRooms">0</span></span>
-                            <span class="stat-item">等待中: <span id="waitingRooms">0</span></span>
-                            <span class="stat-item">遊戲中: <span id="playingRooms">0</span></span>
+            <!-- 報名表單頁面 -->
+            <section id="registrationSection" class="section">
+                <div class="registration-card">
+                    <h2 class="card-title">📝 報名表單</h2>
+                    
+                    <div class="form-group">
+                        <label>LINE 暱稱</label>
+                        <input type="text" id="nickname" placeholder="請輸入您的 LINE 暱稱">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>選擇金額</label>
+                        <div class="amount-options">
+                            <label class="amount-option">
+                                <input type="radio" name="amount" value="30/10">
+                                <span class="amount-btn">$30/10</span>
+                            </label>
+                            <label class="amount-option">
+                                <input type="radio" name="amount" value="60/20">
+                                <span class="amount-btn">$60/20</span>
+                            </label>
+                            <label class="amount-option">
+                                <input type="radio" name="amount" value="100/20">
+                                <span class="amount-btn">$100/20</span>
+                            </label>
+                            <label class="amount-option">
+                                <input type="radio" name="amount" value="200/50">
+                                <span class="amount-btn">$200/50</span>
+                            </label>
                         </div>
                     </div>
                     
-                    <div id="roomList" class="room-list">
-                        <!-- 動態生成房間列表 -->
-                    </div>
-                </div>
-
-                <!-- 3 缺 1 紅色閃爍提示 -->
-                <div id="nearCompleteAlert" class="near-complete-alert" style="display: none;">
-                    <div class="alert-content">
-                        <div class="alert-icon">🔴</div>
-                        <div class="alert-text">
-                            <h3>3 缺 1！</h3>
-                            <p id="alertMessage">目前有一桌 3 缺 1！想打的快來報名！</p>
+                    <!-- 預計開打時間 -->
+                    <div class="time-selection">
+                        <h3>預計開打時間</h3>
+                        <div class="time-options">
+                            <label class="time-option">
+                                <input type="radio" name="startTime" value="滿開" checked>
+                                <div class="time-btn">🎯 湊滿即開</div>
+                            </label>
+                            <label class="time-option">
+                                <input type="radio" name="startTime" value="30分鐘內">
+                                <div class="time-btn">⚡ 30分鐘內</div>
+                            </label>
+                            <label class="time-option">
+                                <input type="radio" name="startTime" value="1小時內">
+                                <div class="time-btn">🕐 1小時內</div>
+                            </label>
                         </div>
-                        <div class="alert-pulse"></div>
+                        
+                        <div class="time-slots">
+                            <h4>具體時段</h4>
+                            <div class="time-grid">
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="14:00">
+                                    <div class="time-slot-btn">14:00</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="14:30">
+                                    <div class="time-slot-btn">14:30</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="15:00">
+                                    <div class="time-slot-btn">15:00</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="15:30">
+                                    <div class="time-slot-btn">15:30</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="16:00">
+                                    <div class="time-slot-btn">16:00</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="16:30">
+                                    <div class="time-slot-btn">16:30</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="17:00">
+                                    <div class="time-slot-btn">17:00</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="17:30">
+                                    <div class="time-slot-btn">17:30</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="18:00">
+                                    <div class="time-slot-btn">18:00</div>
+                                </label>
+                                <label class="time-slot">
+                                    <input type="radio" name="startTime" value="18:30">
+                                    <div class="time-slot-btn">18:30</div>
+                                </label>
+                            </div>
+                        </div>
                     </div>
-                </div>
-
-                <!-- 即時時鐘 -->
-                <div class="realtime-clock">
-                    <div class="clock-display" id="clockDisplay">
-                        <div class="time">00:00:00</div>
-                        <div class="date">2024-01-01</div>
-                    </div>
+                    
+                    <button type="button" class="submit-btn" onclick="window.frontendSystem.submitRegistration()">
+                        確認報名
+                    </button>
                 </div>
             </section>
 
@@ -182,5 +243,43 @@
     </div>
 
     <script src="frontend.js"></script>
+    <script>
+        // 立即執行登入檢查（在 DOM 載入前）
+        (function() {
+            // 檢查是否已經有登入狀態
+            const userInfo = localStorage.getItem('lineUserInfo');
+            const loginMethod = localStorage.getItem('loginMethod');
+            
+            // 檢查 URL 參數中的授權碼
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            
+            // 如果未登入且沒有授權碼，立即跳轉到登入頁面
+            if (!userInfo || loginMethod !== 'line') {
+                if (!code || !state) {
+                    window.location.href = 'line-login.html';
+                    return;
+                }
+            }
+            
+            // 如果有授權碼，等待 frontend.js 處理
+            // 顯示載入畫面
+            document.addEventListener('DOMContentLoaded', function() {
+                if (code && state) {
+                    document.body.innerHTML = `
+                        <div class="loading-screen">
+                            <div class="loading-container">
+                                <div class="neon-loading">
+                                    <div class="loading-spinner"></div>
+                                    <div class="loading-text">正在登入中...</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

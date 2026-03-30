@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Microsoft JhengHei', 'Arial', sans-serif;
-    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    background: linear-gradient(135deg, #0f0f12 0%, #1a1a2e 100%);
     color: #ffffff;
     min-height: 100vh;
     line-height: 1.6;
@@ -88,15 +88,41 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* 卡片樣式 */
+/* 邊框設計 - 螢光綠/電光紫半透明效果 */
 .registration-card, .admin-card {
     background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-    border: 1px solid #3a3a3a;
+    border: 1px solid rgba(57, 255, 20, 0.3);
     border-radius: 20px;
     padding: 40px;
     margin-bottom: 30px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(57, 255, 20, 0.1);
     backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+}
+
+.registration-card::before, .admin-card::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, rgba(57, 255, 20, 0.5), rgba(191, 0, 255, 0.5), rgba(57, 255, 20, 0.5));
+    border-radius: 20px;
+    z-index: -1;
+    animation: borderGlow 3s ease-in-out infinite;
+}
+
+@keyframes borderGlow {
+    0%, 100% {
+        opacity: 0.3;
+        filter: blur(1px);
+    }
+    50% {
+        opacity: 0.8;
+        filter: blur(0px);
+    }
 }
 
 .card-title {
@@ -184,7 +210,7 @@ body {
     box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
 }
 
-/* 按鈕樣式 */
+/* 按鈕特效 - 確認報名螢光黃發光 */
 .submit-btn, .admin-btn {
     width: 100%;
     padding: 18px;
@@ -197,11 +223,33 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 6px 25px rgba(255, 215, 0, 0.3);
+    animation: buttonPulse 2s ease-in-out infinite;
+}
+
+@keyframes buttonPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 6px 25px rgba(255, 215, 0, 0.3);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 8px 35px rgba(255, 215, 0, 0.5);
+    }
 }
 
 .submit-btn:hover, .admin-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(255, 215, 0, 0.4);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 35px rgba(255, 215, 0, 0.5);
+    animation: buttonGlow 1s ease-in-out infinite;
+}
+
+@keyframes buttonGlow {
+    0%, 100% {
+        box-shadow: 0 8px 35px rgba(255, 215, 0, 0.5);
+    }
+    50% {
+        box-shadow: 0 12px 45px rgba(255, 215, 0, 0.8);
+    }
 }
 
 .admin-btn.danger {
@@ -1780,6 +1828,119 @@ input:checked + .slider:before {
     }
 }
 
+/* 強制登入載入畫面 - 多巴胺風格 */
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0f0f12 0%, #1a1a2e 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-container {
+    text-align: center;
+}
+
+.neon-loading {
+    background: linear-gradient(135deg, rgba(57, 255, 20, 0.1) 0%, rgba(191, 0, 255, 0.1) 100%);
+    border: 1px solid rgba(57, 255, 20, 0.3);
+    border-radius: 20px;
+    padding: 40px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(57, 255, 20, 0.1);
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 3px solid rgba(57, 255, 20, 0.3);
+    border-top: 3px solid #39ff14;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: spin 1s linear infinite;
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.4);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #39ff14;
+    text-shadow: 0 0 15px rgba(57, 255, 20, 0.5);
+    animation: textGlow 2s ease-in-out infinite;
+}
+
+@keyframes textGlow {
+    0%, 100% {
+        opacity: 0.8;
+        text-shadow: 0 0 15px rgba(57, 255, 20, 0.5);
+    }
+    50% {
+        opacity: 1;
+        text-shadow: 0 0 25px rgba(57, 255, 20, 0.8);
+    }
+}
+
+/* 登入前禁止訪問大廳的遮罩 */
+.login-required-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0f0f12 0%, #1a1a2e 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 8888;
+}
+
+.login-required-content {
+    text-align: center;
+    padding: 40px;
+}
+
+.login-required-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #39ff14;
+    text-shadow: 0 0 20px rgba(57, 255, 20, 0.5);
+    margin-bottom: 20px;
+}
+
+.login-required-text {
+    font-size: 1.1rem;
+    color: #ffffff;
+    margin-bottom: 30px;
+}
+
+.login-required-btn {
+    background: linear-gradient(135deg, #39ff14 0%, #bf00ff 100%);
+    color: #000000;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 25px rgba(57, 255, 20, 0.3);
+}
+
+.login-required-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 35px rgba(57, 255, 20, 0.5);
+}
+
 /* 多巴胺上癮視覺效果 - 霓虹燈跑馬燈 */
 .neon-ticker {
     background: linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 100%);
@@ -2215,6 +2376,134 @@ input:checked + .slider:before {
     position: relative;
     overflow: hidden;
     min-height: 120px;
+}
+
+/* 時間選單樣式 */
+.time-selection {
+    background: linear-gradient(135deg, rgba(57, 255, 20, 0.1) 0%, rgba(191, 0, 255, 0.1) 100%);
+    border: 1px solid rgba(57, 255, 20, 0.3);
+    border-radius: 15px;
+    padding: 25px;
+    margin: 25px 0;
+    backdrop-filter: blur(8px);
+}
+
+.time-selection h3 {
+    color: #39ff14;
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+    text-align: center;
+    text-shadow: 0 0 15px rgba(57, 255, 20, 0.5);
+}
+
+.time-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.time-option {
+    cursor: pointer;
+}
+
+.time-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.time-btn {
+    display: block;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, rgba(57, 255, 20, 0.1) 0%, rgba(191, 0, 255, 0.1) 100%);
+    border: 1px solid rgba(57, 255, 20, 0.3);
+    border-radius: 10px;
+    color: #ffffff;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.time-option input[type="radio"]:checked + .time-btn {
+    background: linear-gradient(135deg, rgba(57, 255, 20, 0.3) 0%, rgba(191, 0, 255, 0.3) 100%);
+    border-color: #39ff14;
+    color: #39ff14;
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.4);
+    animation: timeGlow 2s ease-in-out infinite;
+}
+
+@keyframes timeGlow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(57, 255, 20, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(57, 255, 20, 0.6);
+    }
+}
+
+.time-slots {
+    margin-top: 20px;
+}
+
+.time-slots h4 {
+    color: #bf00ff;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(191, 0, 255, 0.5);
+}
+
+.time-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 10px;
+}
+
+.time-slot {
+    cursor: pointer;
+}
+
+.time-slot input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.time-slot-btn {
+    display: block;
+    padding: 10px 15px;
+    background: linear-gradient(135deg, rgba(191, 0, 255, 0.1) 0%, rgba(57, 255, 20, 0.1) 100%);
+    border: 1px solid rgba(191, 0, 255, 0.3);
+    border-radius: 8px;
+    color: #ffffff;
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.time-slot input[type="radio"]:checked + .time-slot-btn {
+    background: linear-gradient(135deg, rgba(191, 0, 255, 0.3) 0%, rgba(57, 255, 20, 0.3) 100%);
+    border-color: #bf00ff;
+    color: #bf00ff;
+    box-shadow: 0 0 15px rgba(191, 0, 255, 0.4);
+    animation: slotGlow 2s ease-in-out infinite;
+}
+
+@keyframes slotGlow {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(191, 0, 255, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(191, 0, 255, 0.6);
+    }
+}
+
+.time-btn:hover, .time-slot-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 5px 20px rgba(57, 255, 20, 0.3);
 }
 
 /* 手機響應式設計 */
