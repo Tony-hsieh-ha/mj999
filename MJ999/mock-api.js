@@ -1,12 +1,12 @@
 // Mock API - 模擬後端服務
 class MockAPI {
     constructor() {
-        this.tables = this.loadTables();
+        this.rooms = this.loadRooms(); // 改為房間列表
         this.lineNotifyToken = null;
-        this.notificationCooldown = new Map(); // 防刷版機制
-        this.blacklist = this.loadBlacklist(); // 黑名單系統
-        this.playerRatings = this.loadPlayerRatings(); // 戰力分級
-        this.waitingList = this.loadWaitingList(); // 候補清單
+        this.notificationCooldown = new Map();
+        this.blacklist = this.loadBlacklist();
+        this.playerRatings = this.loadPlayerRatings();
+        this.waitingList = this.loadWaitingList();
         this.initLineNotify();
     }
 
@@ -232,14 +232,69 @@ class MockAPI {
         const diffMinutes = Math.floor((now - waitTime) / (1000 * 60));
         return diffMinutes;
     }
-    loadTables() {
-        const savedTables = localStorage.getItem('mockTables');
-        return savedTables ? JSON.parse(savedTables) : [];
+    // 載入房間資料
+    loadRooms() {
+        const savedRooms = localStorage.getItem('mockRooms');
+        return savedRooms ? JSON.parse(savedRooms) : this.getDefaultRooms();
     }
 
-    // 儲存桌子資料
-    saveTables() {
-        localStorage.setItem('mockTables', JSON.stringify(this.tables));
+    // 獲取預設房間
+    getDefaultRooms() {
+        return [
+            {
+                id: 1,
+                roomTitle: '明星桌',
+                score: '50/20',
+                gameType: '輸贏底台',
+                startTime: '滿開',
+                currentPlayers: 2,
+                maxPlayers: 4,
+                players: [
+                    { id: 1, nickname: '玩家A', avatar: null, joinedAt: new Date().toISOString() },
+                    { id: 2, nickname: '玩家B', avatar: null, joinedAt: new Date().toISOString() }
+                ],
+                status: 'waiting',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 2,
+                roomTitle: '新手桌',
+                score: '30/10',
+                gameType: '輸贏底台',
+                startTime: '14:00',
+                currentPlayers: 3,
+                maxPlayers: 4,
+                players: [
+                    { id: 3, nickname: '玩家C', avatar: null, joinedAt: new Date().toISOString() },
+                    { id: 4, nickname: '玩家D', avatar: null, joinedAt: new Date().toISOString() },
+                    { id: 5, nickname: '玩家E', avatar: null, joinedAt: new Date().toISOString() }
+                ],
+                status: 'waiting',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 3,
+                roomTitle: '高手桌',
+                score: '100/20',
+                gameType: '輸贏底台',
+                startTime: '滿開',
+                currentPlayers: 4,
+                maxPlayers: 4,
+                players: [
+                    { id: 6, nickname: '玩家F', avatar: null, joinedAt: new Date().toISOString() },
+                    { id: 7, nickname: '玩家G', avatar: null, joinedAt: new Date().toISOString() },
+                    { id: 8, nickname: '玩家H', avatar: null, joinedAt: new Date().toISOString() },
+                    { id: 9, nickname: '玩家I', avatar: null, joinedAt: new Date().toISOString() }
+                ],
+                status: 'playing',
+                createdAt: new Date().toISOString()
+            }
+        ];
+    }
+
+    // 儲存房間資料
+    saveRooms() {
+        localStorage.setItem('mockRooms', JSON.stringify(this.rooms));
     }
 
     // 延遲函數

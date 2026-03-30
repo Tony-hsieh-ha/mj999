@@ -122,6 +122,26 @@ class AdminSystem {
         // 導航按鈕
         this.setupNavigationListeners();
 
+        // 房間管理按鈕
+        document.getElementById('createRoomBtn').addEventListener('click', () => {
+            this.createRoom();
+        });
+
+        // 滿開 checkbox 事件
+        document.getElementById('isFullStart').addEventListener('change', (e) => {
+            const timeInput = document.getElementById('startTime');
+            timeInput.disabled = e.target.checked;
+            if (e.target.checked) {
+                timeInput.value = '';
+                timeInput.style.opacity = '0.5';
+                timeInput.style.cursor = 'not-allowed';
+            } else {
+                timeInput.style.opacity = '1';
+                timeInput.style.cursor = 'pointer';
+            }
+        });
+        this.setupNavigationListeners();
+
         // 快速操作按鈕
         document.getElementById('createTable').addEventListener('click', () => {
             this.createTable();
@@ -203,12 +223,12 @@ class AdminSystem {
             const checkboxes = document.querySelectorAll('#registrationsTableBody input[type="checkbox"]');
             checkboxes.forEach(cb => cb.checked = e.target.checked);
         });
-    }
 
     // 頁面切換
     showSection(section) {
-        const sections = ['dashboard', 'registrations', 'settings'];
-        const buttons = ['dashboardView', 'registrationsView', 'settingsView'];
+        // 隱藏所有區塊
+        const sections = ['dashboard', 'registrations', 'rooms', 'settings'];
+        const buttons = ['dashboardView', 'registrationsView', 'roomsView', 'settingsView'];
         
         sections.forEach(sec => {
             const element = document.getElementById(`${sec}Section`);
@@ -223,6 +243,128 @@ class AdminSystem {
         
         if (activeSection) activeSection.classList.add('active');
         if (activeButton) activeButton.classList.add('active');
+    }
+
+    // 開設新房
+    createRoom() {
+        const roomTitle = document.getElementById('roomTitle').value.trim();
+        const roomScore = document.getElementById('roomScore').value;
+        const isFullStart = document.getElementById('isFullStart').checked;
+        const startTime = document.getElementById('startTime').value;
+        
+        // 驗證輸入
+        if (!roomTitle) {
+            this.showNotification('請輸入房間標題', 'error');
+            return;
+        }
+        
+        if (!isFullStart && !startTime) {
+            this.showNotification('請選擇開打時間或勾選滿開', 'error');
+            return;
+        }
+        
+        // 防誤觸確認
+        const confirmMessage = `確定要開設新房間嗎？\n\n房間標題：${roomTitle}\n輸贏底台：${roomScore}\n開打時間：${isFullStart ? '滿開' : startTime}`;
+        
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+        
+        // 創建房間
+        const roomData = {
+            roomTitle: roomTitle,
+            score: roomScore,
+            startTime: isFullStart ? '滿開' : startTime
+        };
+        
+        if (typeof mockAPI !== 'undefined') {
+            const newRoom = mockAPI.createRoom(roomData);
+            
+            this.showNotification(`房間「${roomTitle}」已成功開設！`, 'success');
+            this.logActivity(`開設房間：${roomTitle} (${roomScore})`, 'success');
+            
+            // 清空表單
+            document.getElementById('roomTitle').value = '';
+            document.getElementById('startTime').value = '';
+            document.getElementById('isFullStart').checked = false;
+            
+            // 更新房間列表
+            this.updateAdminRoomList();
+        }
+    }
+    
+    // 更新管理後台房間列表
+    updateAdminRoomList() {
+        const roomListContainer = document.getElementById('adminRoomList');
+        if (!roomListContainer) return;
+        
+        if (typeof mockAPI !== 'undefined') {
+            const rooms = mockAPI.getRooms();
+            
+            if (rooms.length === 0) {
+                roomListContainer.innerHTML = '<p style="text-align: center; color: #888;">目前沒有房間</p>';
+                return;
+            }
+            
+            roomListContainer.innerHTML = rooms.map(room => {
+                const statusClass = room.status === 'playing' ? 'playing' : 
+                                 room.currentPlayers === room.maxPlayers ? 'full' : 
+                                 room.currentPlayers === 3 ? 'near-complete' : 'waiting';
+                
+                const statusText = room.status === 'playing' ? '🎮 遊戲中' : 
+                                  room.currentPlayers === room.maxPlayers ? '👥 已滿' : 
+                                  room.currentPlayers === 3 ? '🔴 3缺1' : 
+                                  `👋 ${room.currentPlayers}/${room.maxPlayers}`;
+                
+                return `
+                    <div class="admin-room-item ${statusClass}">
+                        <div class="room-info">
+                            <div class="room-header">
+                                <h4>${room.roomTitle}</h4>
+                                <span class="room-score">${room.score}</span>
+                            </div>
+                            <div class="room-details">
+                                <span class="room-time">開打時間: ${room.startTime === '滿開' ? '🎯 湊滿 4 人即刻開打' : room.startTime}</span>
+                                <span class="room-players">玩家: ${room.currentPlayers}/${room.maxPlayers}</span>
+                            </div>
+                            <div class="room-status">
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                            </div>
+                        </div>
+                        <div class="room-actions">
+                            <button class="admin-btn danger small" onclick="window.adminSystem.deleteRoom(${room.id})">
+                                🗑️ 刪除
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+    
+    // 刪除房間
+    deleteRoom(roomId) {
+        if (!confirm('確定要刪除這個房間嗎？')) {
+            return;
+        }
+        
+        if (typeof mockAPI !== 'undefined') {
+            const room = mockAPI.getRoom(roomId);
+            if (room) {
+                // 從 rooms 陣列中移除
+                const index = mockAPI.rooms.findIndex(r => r.id === roomId);
+                if (index > -1) {
+                    mockAPI.rooms.splice(index, 1);
+                    mockAPI.saveRooms();
+                    
+                    this.showNotification(`房間「${room.roomTitle}」已刪除`, 'success');
+                    this.logActivity(`刪除房間：${room.roomTitle}`, 'info');
+                    
+                    // 更新房間列表
+                    this.updateAdminRoomList();
+                }
+            }
+        }
     }
 
     // 管理功能
@@ -302,6 +444,10 @@ class AdminSystem {
 
         document.getElementById('registrationsView').addEventListener('click', () => {
             this.showSection('registrations');
+        });
+
+        document.getElementById('roomsView').addEventListener('click', () => {
+            this.showSection('rooms');
         });
 
         document.getElementById('settingsView').addEventListener('click', () => {
@@ -620,6 +766,7 @@ class AdminSystem {
         this.updateDashboardStats();
         this.updateRegistrationsTable();
         this.updateBlacklistList();
+        this.updateAdminRoomList(); // 新增房間列表更新
         this.updateSettingsUI();
         this.updateActivityLog();
     }

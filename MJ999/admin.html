@@ -12,8 +12,9 @@
         <header class="header admin-header">
             <h1 class="title">🔐 管理後台</h1>
             <div class="nav-buttons">
-                <button id="dashboardView" class="nav-btn active">控制台</button>
+                <button id="dashboardView" class="nav-btn active">儀表板</button>
                 <button id="registrationsView" class="nav-btn">報名管理</button>
+                <button id="roomsView" class="nav-btn">房間管理</button>
                 <button id="settingsView" class="nav-btn">系統設定</button>
                 <button class="nav-btn" onclick="location.href='index.html'">🏠 前台</button>
             </div>
@@ -86,7 +87,62 @@
                 </div>
             </section>
 
-            <!-- 報名管理頁面 -->
+            <!-- 房間管理頁面 -->
+            <section id="roomsSection" class="section">
+                <div class="admin-card">
+                    <h2 class="card-title">🏠 房間管理</h2>
+                    
+                    <div class="room-management">
+                        <!-- 開設新房 -->
+                        <div class="create-room-section">
+                            <h3>🎯 開設新房</h3>
+                            <div class="create-room-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="roomTitle">房間標題</label>
+                                        <input type="text" id="roomTitle" placeholder="例如：明星桌、新手桌">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="roomScore">輸贏底台</label>
+                                        <select id="roomScore">
+                                            <option value="30/10">30/10</option>
+                                            <option value="50/20">50/20</option>
+                                            <option value="100/20">100/20</option>
+                                            <option value="200/50">200/50</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="startTime">開打時間</label>
+                                        <div class="time-input-group">
+                                            <input type="time" id="startTime">
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" id="isFullStart">
+                                                <span class="checkmark"></span>
+                                                滿開
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button id="createRoomBtn" class="admin-btn primary">
+                                    🏠 開設新房
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- 房間列表 -->
+                        <div class="room-list-section">
+                            <h3>📋 現有房間</h3>
+                            <div class="admin-room-list" id="adminRoomList">
+                                <!-- 動態生成房間列表 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
             <section id="registrationsSection" class="section">
                 <div class="admin-card">
                     <h2 class="card-title">📋 報名管理</h2>

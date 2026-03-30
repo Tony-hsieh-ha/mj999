@@ -183,14 +183,9 @@ class FrontendSystem {
 
     // 更新UI
     updateUI() {
-        this.updateAmountStats();
-        this.updateRegistrationList();
-        this.updateStatsInfo();
-    }
-
-    // 更新金額統計
-    updateAmountStats() {
-        const amounts = ['30/10', '60/20', '100/20', '200/50'];
+        this.updateRoomList(); // 主要更新房間列表
+        this.updateUserInfo();
+        this.checkAutoTrigger();
         
         amounts.forEach(amount => {
             const count = this.registrations.filter(reg => 
@@ -203,7 +198,126 @@ class FrontendSystem {
         });
     }
 
-    // 更新報名列表
+    // 更新房間列表
+    updateRoomList() {
+        const roomListContainer = document.getElementById('roomList');
+        if (!roomListContainer) return;
+        
+        if (typeof mockAPI !== 'undefined') {
+            const rooms = mockAPI.getRooms();
+            
+            if (rooms.length === 0) {
+                roomListContainer.innerHTML = '<div class="empty-rooms"><p>🎲 目前沒有開設的房間</p></div>';
+                return;
+            }
+            
+            roomListContainer.innerHTML = rooms.map(room => {
+                const isNearComplete = room.currentPlayers === 3;
+                const isFull = room.currentPlayers === room.maxPlayers;
+                const isPlaying = room.status === 'playing';
+                
+                return `
+                    <div class="room-item ${isNearComplete ? 'near-complete' : ''} ${isFull ? 'full' : ''} ${isPlaying ? 'playing' : ''}">
+                        <div class="room-left">
+                            <div class="room-title">${room.roomTitle}</div>
+                            <div class="room-score">${room.score}</div>
+                        </div>
+                        
+                        <div class="room-center">
+                            <div class="room-time">
+                                <span class="time-label">開打時間:</span>
+                                <span class="time-value">${room.startTime === '滿開' ? '🎯 湊滿 4 人即刻開打' : room.startTime}</span>
+                            </div>
+                            <div class="room-players">
+                                ${room.players.map(player => {
+                                    const isCurrentUser = this.currentUser && player.nickname === this.currentUser.displayName;
+                                    const isBlacklisted = this.isPlayerBlacklisted(player.nickname);
+                                    const playerRating = this.getPlayerRating(player.nickname);
+                                    
+                                    return `
+                                        <div class="player-avatar ${isCurrentUser ? 'current-user' : ''} ${isBlacklisted ? 'blacklisted' : ''}">
+                                            ${player.avatar ? 
+                                                `<img src="${player.avatar}" alt="${player.nickname}">` : 
+                                                `<div class="avatar-placeholder">${player.nickname[0]}</div>`
+                                            }
+                                            <div class="player-rating-dot rating-${playerRating}"></div>
+                                            ${isBlacklisted ? '<div class="blacklist-warning">⚠️</div>' : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
+                                ${Array(room.maxPlayers - room.players.length).fill(0).map(() => 
+                                    '<div class="player-avatar empty"><div class="avatar-placeholder">?</div></div>'
+                                ).join('')}
+                            </div>
+                        </div>
+                        
+                        <div class="room-right">
+                            <div class="room-status">
+                                ${isPlaying ? 
+                                    '<span class="status-badge playing">🎮 遊戲中</span>' :
+                                    isFull ? 
+                                    '<span class="status-badge full">👥 已滿</span>' :
+                                    isNearComplete ?
+                                    '<span class="status-badge near-complete">🔴 3 缺 1</span>' :
+                                    `<span class="status-badge waiting">👋 ${room.currentPlayers}/4</span>`
+                                }
+                            </div>
+                            ${this.currentUser && !isFull && !isPlaying ? 
+                                `<button class="join-room-btn" onclick="window.frontendSystem.joinRoom(${room.id})">加入房間</button>` :
+                                ''
+                            }
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 更新統計資訊
+        this.updateRoomStats();
+    }
+    
+    // 更新房間統計
+    updateRoomStats() {
+        if (typeof mockAPI !== 'undefined') {
+            const rooms = mockAPI.getRooms();
+            const totalRooms = rooms.length;
+            const waitingRooms = rooms.filter(room => room.status === 'waiting').length;
+            const playingRooms = rooms.filter(room => room.status === 'playing').length;
+            
+            const totalRoomsEl = document.getElementById('totalRooms');
+            const waitingRoomsEl = document.getElementById('waitingRooms');
+            const playingRoomsEl = document.getElementById('playingRooms');
+            
+            if (totalRoomsEl) totalRoomsEl.textContent = totalRooms;
+            if (waitingRoomsEl) waitingRoomsEl.textContent = waitingRooms;
+            if (playingRoomsEl) playingRoomsEl.textContent = playingRooms;
+        }
+    }
+    
+    // 加入房間
+    async joinRoom(roomId) {
+        if (!this.currentUser) {
+            this.showNotification('請先登入 LINE', 'error');
+            return;
+        }
+        
+        if (typeof mockAPI !== 'undefined') {
+            const playerData = {
+                id: this.currentUser.userId || this.currentUser.displayName,
+                nickname: this.currentUser.displayName,
+                avatar: this.currentUser.pictureUrl
+            };
+            
+            const result = await mockAPI.joinRoom(roomId, playerData);
+            
+            if (result.success) {
+                this.showNotification('成功加入房間！', 'success');
+                this.updateRoomList();
+            } else {
+                this.showNotification(result.message, 'error');
+            }
+        }
+    }
     updateRegistrationList() {
         const listContainer = document.getElementById('registrationList');
         if (!listContainer) return;
