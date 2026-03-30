@@ -15,6 +15,7 @@ class FrontendSystem {
         this.startAutoRefresh();
         this.startClock();
         this.startWaitingTimer();
+        this.startAutoSync(); // 新增自動同步
     }
 
     // 用戶管理
@@ -272,8 +273,94 @@ class FrontendSystem {
         // 檢查是否需要顯示 3 缺 1 閃爍提示
         this.checkNearCompleteAlert();
         
+        // 檢查自動觸發標記
+        this.checkAutoTrigger();
+        
         // 更新候補計時清單
         this.updateWaitingTimerList();
+    }
+
+    // 啟動自動同步（每 10 秒從後端抓取最新資料）
+    startAutoSync() {
+        setInterval(async () => {
+            try {
+                await this.syncDataFromBackend();
+            } catch (error) {
+                console.error('自動同步失敗:', error);
+            }
+        }, 10000); // 每 10 秒同步一次
+    }
+
+    // 從後端同步資料
+    async syncDataFromBackend() {
+        // 模擬從後端 API 獲取最新資料
+        if (typeof mockAPI !== 'undefined') {
+            // 獲取最新報名資料
+            const latestRegistrations = mockAPI.getRegistrations();
+            const latestTables = mockAPI.loadTables();
+            
+            // 檢查是否有變化
+            const hasChanges = this.hasDataChanged(this.registrations, latestRegistrations) ||
+                            this.hasDataChanged(this.tables, latestTables);
+            
+            if (hasChanges) {
+                // 更新本地資料
+                this.registrations = latestRegistrations;
+                this.tables = latestTables;
+                
+                // 重新渲染 UI
+                this.updateUI();
+                
+                console.log('資料已同步:', new Date().toLocaleTimeString('zh-TW'));
+            }
+        }
+    }
+
+    // 檢查資料是否有變化
+    hasDataChanged(oldData, newData) {
+        if (oldData.length !== newData.length) {
+            return true;
+        }
+        
+        // 簡單比較時間戳記
+        const oldTimestamps = oldData.map(item => item.timestamp || '').sort().join(',');
+        const newTimestamps = newData.map(item => item.timestamp || '').sort().join(',');
+        
+        return oldTimestamps !== newTimestamps;
+    }
+
+    // 檢查自動觸發標記
+    checkAutoTrigger() {
+        const trigger = localStorage.getItem('nearCompleteTrigger');
+        if (trigger) {
+            const data = JSON.parse(trigger);
+            const now = Date.now();
+            
+            // 檢查是否在 5 秒內
+            if (now - data.timestamp < 5000) {
+                // 強制顯示 3 缺 1 提示
+                this.forceShowNearCompleteAlert(data.amount);
+            }
+        }
+    }
+
+    // 強制顯示 3 缺 1 提示
+    forceShowNearCompleteAlert(amount) {
+        const alertElement = document.getElementById('nearCompleteAlert');
+        if (alertElement) {
+            alertElement.style.display = 'block';
+            
+            // 更新提示內容
+            const alertText = alertElement.querySelector('.alert-text p');
+            if (alertText) {
+                alertText.textContent = `$${amount} 桌次狀態更新！目前 3 缺 1，想打的快來報名！`;
+            }
+            
+            // 5 秒後隱藏
+            setTimeout(() => {
+                alertElement.style.display = 'none';
+            }, 5000);
+        }
     }
 
     // 更新統計資訊

@@ -226,7 +226,66 @@ class AdminSystem {
     }
 
     // 管理功能
+    createTable() {
+        const waitingRegistrations = this.registrations.filter(reg => reg.status === 'waiting');
+        
+        if (waitingRegistrations.length < 4) {
+            this.showNotification('需要至少4人才能開桌', 'error');
+            return;
+        }
+
+        // 防誤觸確認
+        const tablePlayers = waitingRegistrations.slice(0, 4);
+        const playerNames = tablePlayers.map(p => p.nickname).join(', ');
+        const confirmMessage = `確定要開桌嗎？\n\n玩家：${playerNames}\n金額：$${tablePlayers[0].amount}`;
+        
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        const table = {
+            id: Date.now(),
+            players: tablePlayers,
+            timestamp: new Date().toISOString(),
+            status: 'playing'
+        };
+
+        // 更新報名狀態
+        tablePlayers.forEach(player => {
+            const registration = this.registrations.find(reg => reg.id === player.id);
+            if (registration) {
+                registration.status = 'playing';
+            }
+        });
+
+        this.tables.push(table);
+        this.saveData();
+        this.updateUI();
+
+        this.showNotification(`桌子已創建！玩家：${playerNames}`, 'success');
+        this.logActivity(`開桌：${playerNames}`, 'success');
+        
+        // 發送 LINE Notify 通知
+        this.sendLineNotify(`開桌成功！玩家：${playerNames}`);
+        
+        // 檢查是否需要發送差一人通知
+        this.checkNearCompleteNotification();
+    }
+
+    // 管理功能
     clearAllRegistrations() {
+        if (this.registrations.length === 0) {
+            this.showNotification('目前沒有報名資料', 'info');
+            return;
+        }
+        
+        // 防誤觸確認
+        const confirmMessage = `確定要清空所有 ${this.registrations.length} 筆報名嗎？\n\n此操作無法復原，請確認！`;
+        
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+        
         this.registrations = [];
         this.tables = [];
         this.saveData();
@@ -259,16 +318,23 @@ class AdminSystem {
             return;
         }
 
-        if (confirm(`確定要刪除選中的 ${ids.length} 個報名嗎？`)) {
-            this.registrations = this.registrations.filter(reg => !ids.includes(reg.id));
-            this.saveData();
-            this.updateUI();
-            this.showNotification(`已刪除 ${ids.length} 個報名`, 'success');
-            this.logActivity(`批量刪除：${ids.length} 個報名`, 'success');
-            
-            // 檢查是否需要發送差一人通知
-            this.checkNearCompleteNotification();
+        // 防誤觸確認
+        const selectedRegistrations = this.registrations.filter(reg => ids.includes(reg.id));
+        const playerNames = selectedRegistrations.map(reg => reg.nickname).join(', ');
+        const confirmMessage = `確定要刪除選中的 ${ids.length} 個報名嗎？\n\n玩家：${playerNames}`;
+        
+        if (!confirm(confirmMessage)) {
+            return;
         }
+
+        this.registrations = this.registrations.filter(reg => !ids.includes(reg.id));
+        this.saveData();
+        this.updateUI();
+        this.showNotification(`已刪除 ${ids.length} 個報名`, 'success');
+        this.logActivity(`批量刪除：${ids.length} 個報名`, 'success');
+        
+        // 檢查是否需要發送差一人通知
+        this.checkNearCompleteNotification();
     }
 
     bulkMatch() {
@@ -630,16 +696,27 @@ class AdminSystem {
     }
 
     deleteRegistration(id) {
-        if (confirm('確定要刪除這筆報名嗎？')) {
-            this.registrations = this.registrations.filter(reg => reg.id !== id);
-            this.saveData();
-            this.updateUI();
-            this.showNotification('報名已刪除', 'info');
-            this.logActivity(`刪除報名 ID: ${id}`, 'info');
-            
-            // 檢查是否需要發送差一人通知
-            this.checkNearCompleteNotification();
+        const registration = this.registrations.find(reg => reg.id === id);
+        if (!registration) {
+            this.showNotification('找不到該筆報名資料', 'error');
+            return;
         }
+        
+        // 防誤觸確認
+        const confirmMessage = `確定要刪除這筆報名嗎？\n\n玩家：${registration.nickname}\n金額：$${registration.amount}\n時間：${new Date(registration.timestamp).toLocaleString('zh-TW')}`;
+        
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+        
+        this.registrations = this.registrations.filter(reg => reg.id !== id);
+        this.saveData();
+        this.updateUI();
+        this.showNotification('報名已刪除', 'info');
+        this.logActivity(`刪除報名：${registration.nickname}`, 'info');
+        
+        // 檢查是否需要發送差一人通知
+        this.checkNearCompleteNotification();
     }
 
     // 檢查是否需要發送差一人通知

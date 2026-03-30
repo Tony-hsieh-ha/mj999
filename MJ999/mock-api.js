@@ -247,7 +247,7 @@ class MockAPI {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    // 檢查是否成桌
+    // 檢查是否成桌（加入防呆機制）
     async checkForCompleteTable(amount) {
         // 模擬API延遲
         await this.delay(500);
@@ -257,6 +257,19 @@ class MockAPI {
         const waitingRegistrations = registrations.filter(reg => 
             reg.status === 'waiting' && reg.amount === amount
         );
+
+        // 防呆機制：嚴格檢查人數上限
+        if (waitingRegistrations.length > 4) {
+            console.warn('警告：等待人數超過 4 人上限');
+            return { error: '等待人數超過上限，請檢查系統資料' };
+        }
+
+        // 檢查重複玩家名稱
+        const duplicateNames = this.checkDuplicateNames(waitingRegistrations);
+        if (duplicateNames.length > 0) {
+            console.warn('警告：發現重複玩家名稱', duplicateNames);
+            return { error: `發現重複玩家名稱：${duplicateNames.join(', ')}` };
+        }
 
         // 檢查是否有4人
         if (waitingRegistrations.length >= 4) {
@@ -294,6 +307,92 @@ class MockAPI {
         await this.checkAndNotifyNearComplete();
 
         return null;
+    }
+
+    // 檢查重複玩家名稱
+    checkDuplicateNames(registrations) {
+        const nameCount = {};
+        const duplicates = [];
+        
+        registrations.forEach(reg => {
+            const name = reg.nickname;
+            if (nameCount[name]) {
+                nameCount[name]++;
+                if (nameCount[name] === 2) {
+                    duplicates.push(name);
+                }
+            } else {
+                nameCount[name] = 1;
+            }
+        });
+        
+        return duplicates;
+    }
+
+    // 檢查桌子人數上限
+    validateTableSize(tablePlayers) {
+        if (tablePlayers.length > 4) {
+            return {
+                valid: false,
+                message: '每桌最多只能有 4 人，目前人數超過上限'
+            };
+        }
+        
+        if (tablePlayers.length < 0) {
+            return {
+                valid: false,
+                message: '人數不能為負數'
+            };
+        }
+        
+        return { valid: true };
+    }
+
+    // 更新桌子狀態（加入觸發機制）
+    async updateTableStatus(tableId, newStatus) {
+        const table = this.tables.find(t => t.id === tableId);
+        if (!table) {
+            return { success: false, message: '桌子不存在' };
+        }
+        
+        const oldStatus = table.status;
+        table.status = newStatus;
+        this.saveTables();
+        
+        // 自動觸發：當從 4 人調降回 3 人時
+        if (oldStatus === 'playing' && newStatus === 'waiting' && table.players.length === 4) {
+            // 將其中一個玩家移回等待狀態
+            const playerToMove = table.players.pop();
+            const registration = this.registrations.find(reg => reg.id === playerToMove.id);
+            if (registration) {
+                registration.status = 'waiting';
+                this.saveRegistrations();
+            }
+            
+            // 觸發 LINE Notify
+            if (typeof lineNotify !== 'undefined') {
+                await lineNotify.sendNotification(`【MJ999 狀態更新】$${table.amount} 桌次從遊戲中調整為等待中，目前 3 缺 1！`);
+            }
+            
+            // 觸發前台紅色呼吸燈
+            this.triggerNearCompleteAlert(table.amount);
+        }
+        
+        return { success: true, table };
+    }
+
+    // 觸發前台紅色呼吸燈
+    triggerNearCompleteAlert(amount) {
+        // 設置觸發標記
+        localStorage.setItem('nearCompleteTrigger', JSON.stringify({
+            amount: amount,
+            timestamp: Date.now()
+        }));
+        
+        // 5 秒後清除標記
+        setTimeout(() => {
+            localStorage.removeItem('nearCompleteTrigger');
+        }, 5000);
     }
 
     // 處理玩家回應
