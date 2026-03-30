@@ -197,6 +197,8 @@
             document.getElementById('loading').style.display = 'block';
             
             try {
+                console.log('處理 LINE 回調，code:', code, 'state:', state);
+                
                 // 實際的 LINE Login API 調用
                 const userInfo = await getLineUserInfo(code, state);
                 
@@ -209,11 +211,11 @@
                         window.location.href = 'index.html';
                     }, 2000); // 2秒後跳轉，讓用戶看到登入成功訊息
                 } else {
-                    showError();
+                    showError('獲取用戶資訊失敗');
                 }
             } catch (error) {
                 console.error('LINE登入錯誤:', error);
-                showError();
+                showError('登入過程發生錯誤：' + error.message);
             }
             
             document.getElementById('loading').style.display = 'none';
@@ -222,6 +224,8 @@
         // 實際 LINE Login API 調用
         async function getLineUserInfo(code, state) {
             try {
+                console.log('開始獲取 LINE 用戶資訊...');
+                
                 // 使用我們自己的 API 端點來處理 token 交換
                 const tokenResponse = await fetch('/api/line/token', {
                     method: 'POST',
@@ -234,6 +238,8 @@
                     })
                 });
                 
+                console.log('Token 交換回應狀態:', tokenResponse.status);
+                
                 if (!tokenResponse.ok) {
                     const errorText = await tokenResponse.text();
                     console.error('Token 交換失敗:', errorText);
@@ -241,6 +247,7 @@
                 }
                 
                 const tokenData = await tokenResponse.json();
+                console.log('Token 交換成功:', tokenData);
                 
                 // 使用 access token 獲取用戶資料
                 const profileResponse = await fetch('https://api.line.me/v2/profile', {
@@ -249,11 +256,14 @@
                     }
                 });
                 
+                console.log('用戶資料回應狀態:', profileResponse.status);
+                
                 if (!profileResponse.ok) {
                     throw new Error('獲取用戶資料失敗');
                 }
                 
                 const profileData = await profileResponse.json();
+                console.log('用戶資料:', profileData);
                 
                 return {
                     userId: profileData.userId,
@@ -283,8 +293,10 @@
         }
 
         // 顯示錯誤訊息
-        function showError() {
-            document.getElementById('errorMessage').style.display = 'block';
+        function showError(message = '登入失敗，請重試') {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
             document.getElementById('loginSection').style.display = 'block';
         }
 

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINE Login 測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button {
+            background: #06C755;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #05A847;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 LINE Login 測試工具</h1>
+    
+    <div class="test-section">
+        <h2>1. 檢查 LINE 設定</h2>
+        <button onclick="testLineConfig()">測試 LINE 設定</button>
+        <div id="configResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 測試 API 端點</h2>
+        <button onclick="testAPIEndpoint()">測試 /api/line/token</button>
+        <div id="apiResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 檢查 URL 參數</h2>
+        <button onclick="checkURLParams()">檢查當前 URL</button>
+        <div id="urlResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 手動測試登入</h2>
+        <button onclick="testManualLogin()">手動測試 LINE 登入</button>
+        <div id="loginResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. 環境資訊</h2>
+        <button onclick="showEnvironment()">顯示環境資訊</button>
+        <div id="envResult"></div>
+    </div>
+
+    <script>
+        // LINE 設定
+        const LINE_CONFIG = {
+            channelId: '2004473747',
+            redirectUri: 'https://mj999-2168.vercel.app/',
+            scope: 'openid profile',
+            nonce: 'test_' + Date.now()
+        };
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function showCode(elementId, code, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">結果：</div><pre>${code}</pre>`;
+        }
+
+        // 1. 檢查 LINE 設定
+        async function testLineConfig() {
+            try {
+                const config = {
+                    channelId: LINE_CONFIG.channelId,
+                    redirectUri: LINE_CONFIG.redirectUri,
+                    scope: LINE_CONFIG.scope,
+                    authUrl: `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CONFIG.channelId}&redirect_uri=${LINE_CONFIG.redirectUri}&state=test_${Date.now()}&scope=${LINE_CONFIG.scope}&nonce=${LINE_CONFIG.nonce}`
+                };
+                
+                showCode('configResult', JSON.stringify(config, null, 2), 'success');
+            } catch (error) {
+                showResult('configResult', '設定檢查失敗：' + error.message, 'error');
+            }
+        }
+
+        // 2. 測試 API 端點
+        async function testAPIEndpoint() {
+            try {
+                showResult('apiResult', '正在測試 API 端點...', 'info');
+                
+                // 測試無效請求
+                const response = await fetch('/api/line/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        code: 'test_code',
+                        state: 'test_state'
+                    })
+                });
+                
+                const result = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    body: await response.text()
+                };
+                
+                showCode('apiResult', JSON.stringify(result, null, 2), response.ok ? 'success' : 'error');
+            } catch (error) {
+                showResult('apiResult', 'API 測試失敗：' + error.message, 'error');
+            }
+        }
+
+        // 3. 檢查 URL 參數
+        function checkURLParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const params = {
+                code: urlParams.get('code'),
+                state: urlParams.get('state'),
+                error: urlParams.get('error'),
+                errorDescription: urlParams.get('error_description'),
+                fullUrl: window.location.href
+            };
+            
+            if (params.code) {
+                showCode('urlResult', JSON.stringify(params, null, 2), 'success');
+            } else if (params.error) {
+                showCode('urlResult', JSON.stringify(params, null, 2), 'error');
+            } else {
+                showCode('urlResult', JSON.stringify(params, null, 2), 'info');
+            }
+        }
+
+        // 4. 手動測試登入
+        function testManualLogin() {
+            const state = 'test_' + Date.now();
+            const authUrl = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CONFIG.channelId}&redirect_uri=${LINE_CONFIG.redirectUri}&state=${state}&scope=${LINE_CONFIG.scope}&nonce=${LINE_CONFIG.nonce}`;
+            
+            showResult('loginResult', `正在跳轉到 LINE 授權頁面...<br><a href="${authUrl}" target="_blank">${authUrl}</a>`, 'info');
+            
+            // 在新視窗開啟
+            window.open(authUrl, '_blank');
+        }
+
+        // 5. 顯示環境資訊
+        function showEnvironment() {
+            const env = {
+                userAgent: navigator.userAgent,
+                currentUrl: window.location.href,
+                origin: window.location.origin,
+                protocol: window.location.protocol,
+                hostname: window.location.hostname,
+                port: window.location.port,
+                pathname: window.location.pathname,
+                timestamp: new Date().toISOString()
+            };
+            
+            showCode('envResult', JSON.stringify(env, null, 2), 'info');
+        }
+
+        // 頁面載入時自動檢查
+        window.addEventListener('load', function() {
+            checkURLParams();
+            showEnvironment();
+        });
+    </script>
+</body>
+</html>
