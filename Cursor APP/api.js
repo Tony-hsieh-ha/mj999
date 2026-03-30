@@ -480,7 +480,7 @@ class APIRoutes {
             // LINE Token 交換設定
             const LINE_CONFIG = {
                 clientId: '2004473747',
-                clientSecret: process.env?.LINE_CLIENT_SECRET || '',
+                clientSecret: 'a5ef8b23a930a8320c273f21badc78c2', // 直接寫死的 LINE Channel Secret
                 redirectUri: 'https://mj999-2168.vercel.app/' // 請確保最後面有一個斜線 /
             };
             
