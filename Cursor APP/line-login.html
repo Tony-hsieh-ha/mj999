@@ -182,22 +182,22 @@
             const code = urlParams.get('code');
             const state = urlParams.get('state');
             
-            if (code && state && state.startsWith('login_')) {
+            if (code && state) {
                 // 有授權碼，處理登入
-                handleLineCallback(code);
+                handleLineCallback(code, state);
                 return true;
             }
             return false;
         }
 
         // 處理LINE回調
-        async function handleLineCallback(code) {
+        async function handleLineCallback(code, state) {
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('loading').style.display = 'block';
             
             try {
                 // 實際的 LINE Login API 調用
-                const userInfo = await getLineUserInfo(code);
+                const userInfo = await getLineUserInfo(code, state);
                 
                 if (userInfo) {
                     displayUserInfo(userInfo);
@@ -219,30 +219,29 @@
         }
 
         // 實際 LINE Login API 調用
-        async function getLineUserInfo(code) {
+        async function getLineUserInfo(code, state) {
             try {
-                // 使用授權碼獲取 access token
-                const tokenResponse = await fetch('https://api.line.me/oauth2/v2.1/token', {
+                // 使用我們自己的 API 端點來處理 token 交換
+                const tokenResponse = await fetch('/api/line/token', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Type': 'application/json'
                     },
-                    body: new URLSearchParams({
-                        'grant_type': 'authorization_code',
-                        'code': code,
-                        'redirect_uri': 'https://mj999-2168.vercel.app/', // 與 LINE 後台完全一致
-                        'client_id': '2004473747',
-                        'client_secret': 'a5ef8b23a930a8320c273f21badc78c2'
+                    body: JSON.stringify({ 
+                        code: code,
+                        state: state
                     })
                 });
                 
                 if (!tokenResponse.ok) {
-                    throw new Error('Token 交換失敗');
+                    const errorText = await tokenResponse.text();
+                    console.error('Token 交換失敗:', errorText);
+                    throw new Error('Token 交換失敗: ' + errorText);
                 }
                 
                 const tokenData = await tokenResponse.json();
                 
-                // 使用 access token 獲取用戶資訊
+                // 使用 access token 獲取用戶資料
                 const profileResponse = await fetch('https://api.line.me/v2/profile', {
                     headers: {
                         'Authorization': `Bearer ${tokenData.access_token}`
@@ -250,7 +249,7 @@
                 });
                 
                 if (!profileResponse.ok) {
-                    throw new Error('獲取用戶資訊失敗');
+                    throw new Error('獲取用戶資料失敗');
                 }
                 
                 const profileData = await profileResponse.json();
