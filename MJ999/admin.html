@@ -11,6 +11,19 @@
     <div class="container">
         <header class="header admin-header">
             <h1 class="title">🔐 管理後台</h1>
+            
+            <!-- 全場廣播區域 -->
+            <div class="broadcast-section">
+                <div class="broadcast-input-group">
+                    <input type="text" id="broadcastMessage" placeholder="📢 輸入全場廣播訊息..." maxlength="100">
+                    <button id="sendBroadcastBtn" class="broadcast-btn">
+                        <span class="broadcast-icon">📡</span>
+                        <span class="broadcast-text">發送廣播</span>
+                    </button>
+                </div>
+                <div class="broadcast-status" id="broadcastStatus"></div>
+            </div>
+            
             <div class="nav-buttons">
                 <button id="dashboardView" class="nav-btn active">儀表板</button>
                 <button id="registrationsView" class="nav-btn">報名管理</button>
@@ -91,6 +104,24 @@
             <section id="roomsSection" class="section">
                 <div class="admin-card">
                     <h2 class="card-title">🏠 房間管理</h2>
+                    
+                    <!-- 玩家狀態勳章 -->
+                    <div class="player-badges-section">
+                        <h3>🏆 玩家狀態勳章</h3>
+                        <div class="badge-controls">
+                            <select id="badgePlayerSelect" class="badge-player-select">
+                                <option value="">選擇玩家...</option>
+                            </select>
+                            <div class="badge-buttons">
+                                <button class="badge-btn fire" onclick="window.adminSystem.giveBadge('fire')">
+                                    🔥 火苗
+                                </button>
+                                <button class="badge-btn money" onclick="window.adminSystem.giveBadge('money')">
+                                    💰 發財
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     
                     <div class="room-management">
                         <!-- 開設新房 -->

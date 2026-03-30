@@ -183,22 +183,132 @@ class FrontendSystem {
 
     // 更新UI
     updateUI() {
-        this.updateRoomList(); // 主要更新房間列表
+        this.updateRoomListWithAnimation(); // 使用帶動畫的房間列表更新
         this.updateUserInfo();
         this.checkAutoTrigger();
-        
-        amounts.forEach(amount => {
-            const count = this.registrations.filter(reg => 
-                reg.status === 'waiting' && reg.amount === amount
-            ).length;
-            const element = document.getElementById(`count-${amount.replace('/', '-')}`);
-            if (element) {
-                element.textContent = `${count}人`;
-            }
-        });
+        this.checkBroadcastMessage(); // 檢查廣播訊息
+        this.updateLiveStats(); // 更新即時統計
     }
 
-    // 更新房間列表
+    // 添加事件到跑馬燈
+    addEventToTicker(event) {
+        const tickerContent = document.getElementById('eventTickerContent');
+        if (tickerContent) {
+            const now = new Date();
+            const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            const eventHtml = `<span class="event-text">🎯 ${timeString}，${event}</span>`;
+            
+            // 添加到現有內容
+            tickerContent.innerHTML += eventHtml;
+            
+            // 限制最多 5 個事件
+            const events = tickerContent.querySelectorAll('.event-text');
+            if (events.length > 5) {
+                events[0].remove();
+            }
+        }
+    }
+    
+    // 更新房間列表時添加數字跳動效果
+    updateRoomListWithAnimation() {
+        const roomListContainer = document.getElementById('roomList');
+        if (!roomListContainer) return;
+        
+        if (typeof mockAPI !== 'undefined') {
+            const rooms = mockAPI.getRooms();
+            
+            if (rooms.length === 0) {
+                roomListContainer.innerHTML = '<div class="empty-rooms"><p>🎲 目前沒有開設的房間</p></div>';
+                return;
+            }
+            
+            roomListContainer.innerHTML = rooms.map(room => {
+                const isNearComplete = room.currentPlayers === 3;
+                const isFull = room.currentPlayers === room.maxPlayers;
+                const isPlaying = room.status === 'playing';
+                
+                return `
+                    <div class="room-item ${isNearComplete ? 'near-complete' : ''} ${isFull ? 'full' : ''} ${isPlaying ? 'playing' : ''}">
+                        <div class="room-left">
+                            <div class="room-title">${room.roomTitle}</div>
+                            <div class="room-score">${room.score}</div>
+                        </div>
+                        
+                        <div class="room-center">
+                            <div class="room-time">
+                                <span class="time-label">開打時間:</span>
+                                <span class="time-value">${room.startTime === '滿開' ? '🎯 湊滿 4 人即刻開打' : room.startTime}</span>
+                            </div>
+                            <div class="room-players">
+                                ${room.players.map(player => {
+                                    const isCurrentUser = this.currentUser && player.nickname === this.currentUser.displayName;
+                                    const isBlacklisted = this.isPlayerBlacklisted(player.nickname);
+                                    const playerRating = this.getPlayerRating(player.nickname);
+                                    const playerBadge = this.getPlayerBadge(player.nickname);
+                                    
+                                    return `
+                                        <div class="player-avatar ${isCurrentUser ? 'current-user' : ''} ${isBlacklisted ? 'blacklisted' : ''} haptic-feedback">
+                                            ${player.avatar ? 
+                                                `<img src="${player.avatar}" alt="${player.nickname}">` : 
+                                                `<div class="avatar-placeholder">${player.nickname[0]}</div>`
+                                            }
+                                            <div class="player-rating-dot rating-${playerRating}"></div>
+                                            ${isBlacklisted ? '<div class="blacklist-warning">⚠️</div>' : ''}
+                                            ${playerBadge ? `<div class="player-badge ${playerBadge.type}">${playerBadge.emoji}</div>` : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
+                                ${Array(room.maxPlayers - room.players.length).fill(0).map(() => 
+                                    '<div class="player-avatar empty"><div class="avatar-placeholder">?</div></div>'
+                                ).join('')}
+                            </div>
+                        </div>
+                        
+                        <div class="room-right">
+                            <div class="room-status">
+                                ${isPlaying ? 
+                                    '<span class="status-badge playing">🎮 遊戲中</span>' :
+                                    isFull ? 
+                                    '<span class="status-badge full">👥 已滿</span>' :
+                                    isNearComplete ?
+                                    '<span class="status-badge near-complete player-number-change">🔴 3 缺 1</span>' :
+                                    `<span class="status-badge waiting player-number-change">👋 <span class="player-count">${room.currentPlayers}</span>/4</span>`
+                                }
+                            </div>
+                            ${this.currentUser && !isFull && !isPlaying ? 
+                                `<button class="join-room-btn haptic-feedback" onclick="window.frontendSystem.joinRoom(${room.id})">加入房間</button>` :
+                                ''
+                            }
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // 添加觸覺回饋到所有按鈕
+            this.addHapticFeedback();
+        }
+        
+        // 更新統計資訊
+        this.updateRoomStats();
+    }
+    
+    // 添加觸覺回饋
+    addHapticFeedback() {
+        const buttons = document.querySelectorAll('.join-room-btn, .nav-btn, .admin-btn');
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                this.triggerHapticFeedback();
+            });
+        });
+    }
+    
+    // 獲取玩家勳章
+    getPlayerBadge(playerName) {
+        const playerBadges = JSON.parse(localStorage.getItem('playerBadges') || '{}');
+        const badges = playerBadges[playerName];
+        return badges && badges.length > 0 ? badges[badges.length - 1] : null;
+    }
     updateRoomList() {
         const roomListContainer = document.getElementById('roomList');
         if (!roomListContainer) return;
@@ -276,7 +386,77 @@ class FrontendSystem {
         this.updateRoomStats();
     }
     
-    // 更新房間統計
+    // 檢查廣播訊息
+    checkBroadcastMessage() {
+        const broadcastData = localStorage.getItem('broadcastMessage');
+        if (broadcastData) {
+            const data = JSON.parse(broadcastData);
+            const now = Date.now();
+            
+            // 顯示 30 秒內的廣播
+            if (now - data.timestamp < 30000) {
+                this.showNeonTicker(data.message);
+            }
+            
+            // 清理過期廣播
+            localStorage.removeItem('broadcastMessage');
+        }
+    }
+    
+    // 顯示霓虹燈跑馬燈
+    showNeonTicker(message) {
+        const tickerContent = document.getElementById('tickerContent');
+        if (tickerContent) {
+            tickerContent.innerHTML = `<span class="ticker-text">📡 ${message}</span>`;
+            const ticker = document.getElementById('neonTicker');
+            ticker.style.display = 'block';
+            
+            // 30 秒後隱藏
+            setTimeout(() => {
+                ticker.style.display = 'none';
+            }, 30000);
+        }
+    }
+    
+    // 更新即時統計
+    updateLiveStats() {
+        if (typeof mockAPI !== 'undefined') {
+            const rooms = mockAPI.getRooms();
+            
+            // 計算在線人數
+            let onlineCount = 0;
+            rooms.forEach(room => {
+                onlineCount += room.players.length;
+            });
+            
+            // 計算今日開桌數
+            const todayTables = rooms.filter(room => room.status === 'playing').length;
+            
+            // 計算熱度指數
+            const heatIndex = Math.min(99, Math.floor((onlineCount / 12) * 100));
+            
+            // 更新顯示
+            const onlineCountEl = document.getElementById('onlineCount');
+            const todayTablesEl = document.getElementById('todayTables');
+            const heatIndexEl = document.getElementById('heatIndex');
+            
+            if (onlineCountEl) {
+                const oldValue = parseInt(onlineCountEl.textContent);
+                onlineCountEl.textContent = onlineCount;
+                
+                // 數字變動時添加跳動效果
+                if (oldValue !== onlineCount) {
+                    onlineCountEl.classList.add('player-count-change');
+                    setTimeout(() => {
+                        onlineCountEl.classList.remove('player-count-change');
+                    }, 500);
+                }
+            }
+            
+            if (todayTablesEl) todayTablesEl.textContent = todayTables;
+            if (heatIndexEl) heatIndexEl.textContent = heatIndex;
+        }
+    }
     updateRoomStats() {
         if (typeof mockAPI !== 'undefined') {
             const rooms = mockAPI.getRooms();

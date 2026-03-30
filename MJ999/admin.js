@@ -127,6 +127,18 @@ class AdminSystem {
             this.createRoom();
         });
 
+        // 廣播功能
+        document.getElementById('sendBroadcastBtn').addEventListener('click', () => {
+            this.sendBroadcast();
+        });
+
+        // 廣播訊息輸入框 Enter 鍵發送
+        document.getElementById('broadcastMessage').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.sendBroadcast();
+            }
+        });
+
         // 滿開 checkbox 事件
         document.getElementById('isFullStart').addEventListener('change', (e) => {
             const timeInput = document.getElementById('startTime');
@@ -364,6 +376,66 @@ class AdminSystem {
                     this.updateAdminRoomList();
                 }
             }
+        }
+    }
+
+    // 發送全場廣播
+    async sendBroadcast() {
+        const messageInput = document.getElementById('broadcastMessage');
+        const sendBtn = document.getElementById('sendBroadcastBtn');
+        const statusEl = document.getElementById('broadcastStatus');
+        
+        const message = messageInput.value.trim();
+        
+        if (!message) {
+            this.showNotification('請輸入廣播訊息', 'error');
+            return;
+        }
+        
+        // 防止重複發送
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<span class="broadcast-icon">⏳</span><span class="broadcast-text">發送中...</span>';
+        statusEl.textContent = '📡 正在發送廣播...';
+        statusEl.className = 'broadcast-status sending';
+        
+        try {
+            // 發送 LINE Notify
+            if (typeof mockAPI !== 'undefined' && mockAPI.lineNotifyToken) {
+                await mockAPI.sendLineNotification(`📢 全場廣播\n\n${message}`);
+            }
+            
+            // 設置前台跑馬燈
+            localStorage.setItem('broadcastMessage', JSON.stringify({
+                message: message,
+                timestamp: Date.now(),
+                type: 'broadcast'
+            }));
+            
+            // 清空輸入框
+            messageInput.value = '';
+            
+            // 顯示成功狀態
+            statusEl.textContent = '✅ 廣播已發送！';
+            statusEl.className = 'broadcast-status success';
+            
+            this.showNotification('廣播發送成功！', 'success');
+            this.logActivity(`發送全場廣播：${message}`, 'info');
+            
+            // 3秒後恢復按鈕
+            setTimeout(() => {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<span class="broadcast-icon">📡</span><span class="broadcast-text">發送廣播</span>';
+                statusEl.textContent = '';
+                statusEl.className = 'broadcast-status';
+            }, 3000);
+            
+        } catch (error) {
+            console.error('廣播發送失敗:', error);
+            statusEl.textContent = '❌ 發送失敗，請重試';
+            statusEl.className = 'broadcast-status error';
+            
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<span class="broadcast-icon">📡</span><span class="broadcast-text">發送廣播</span>';
         }
     }
 
