@@ -1,5 +1,5 @@
 // 智能配對系統
-class MahjongRegistrationSystem {
+class RegistrationSystem {
     constructor() {
         this.registrations = [];
         this.tables = [];
@@ -119,8 +119,8 @@ class MahjongRegistrationSystem {
             });
         }
 
-        // 時間選擇器事件
-        this.setupTimeSelector();
+        // 初始化時間選項
+        this.initializeTimeOptions();
 
         // 管理後台按鈕
         document.getElementById('createTable').addEventListener('click', () => {
@@ -135,47 +135,6 @@ class MahjongRegistrationSystem {
 
         document.getElementById('lineNotifySettings').addEventListener('click', () => {
             this.showLineNotifySettings();
-        });
-    }
-
-    // 設置時間選擇器
-    setupTimeSelector() {
-        // 快捷時間按鈕
-        document.querySelectorAll('.time-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const time = e.target.dataset.time;
-                this.selectTime(time, e.target);
-            });
-        });
-
-        // 自訂時間輸入
-        const customTimeInput = document.getElementById('preferredTime');
-        if (customTimeInput) {
-            customTimeInput.addEventListener('change', (e) => {
-                this.selectCustomTime(e.target.value);
-            });
-        }
-    }
-
-    // 選擇時間
-    selectTime(time, buttonElement) {
-        // 清除所有按鈕的active狀態
-        document.querySelectorAll('.time-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        
-        // 設置當前按鈕為active
-        buttonElement.classList.add('active');
-        
-        // 設置時間輸入框的值
-        document.getElementById('preferredTime').value = time;
-    }
-
-    // 選擇自訂時間
-    selectCustomTime(time) {
-        // 清除所有快捷按鈕的active狀態
-        document.querySelectorAll('.time-btn').forEach(btn => {
-            btn.classList.remove('active');
         });
     }
 
@@ -203,12 +162,13 @@ class MahjongRegistrationSystem {
 
     // 處理報名
     handleRegistration() {
-        const nickname = document.getElementById('nickname').value.trim();
+        const nickname = this.currentUser ? this.currentUser.displayName : document.getElementById('nickname').value.trim();
         const amount = document.querySelector('input[name="amount"]:checked');
-        const preferredTime = document.getElementById('preferredTime').value;
+        const earliestTime = document.getElementById('earliestTime').value;
+        const latestTime = document.getElementById('latestTime').value;
 
         if (!nickname) {
-            this.showNotification('請輸入暱稱', 'error');
+            this.showNotification('請先登入', 'error');
             return;
         }
 
@@ -217,8 +177,13 @@ class MahjongRegistrationSystem {
             return;
         }
 
-        if (!preferredTime) {
-            this.showNotification('請選擇希望開打時間', 'error');
+        if (!earliestTime || !latestTime) {
+            this.showNotification('請選擇希望開打時間區間', 'error');
+            return;
+        }
+
+        if (earliestTime >= latestTime) {
+            this.showNotification('最晚時間必須晚於最早時間', 'error');
             return;
         }
 
@@ -232,7 +197,8 @@ class MahjongRegistrationSystem {
             id: Date.now(),
             nickname: nickname,
             amount: amount.value,
-            preferredTime: preferredTime,
+            earliestTime: earliestTime,
+            latestTime: latestTime,
             timestamp: new Date().toISOString(),
             status: 'waiting'
         };
@@ -243,12 +209,12 @@ class MahjongRegistrationSystem {
 
         // 清空表單
         document.getElementById('registrationForm').reset();
-        this.clearTimeSelection();
+        this.resetTimeRange();
         
-        this.showNotification(`報名成功！${nickname} 已報名 $${amount.value}，希望 ${preferredTime} 開打`, 'success');
+        this.showNotification(`報名成功！${nickname} 已報名 $${amount.value}，時間區間 ${earliestTime} ~ ${latestTime}`, 'success');
         
         // 發送 LINE Notify 通知（如果已設定）
-        this.sendLineNotify(`新報名：${nickname} 報名 $${amount.value}，希望 ${preferredTime} 開打`);
+        this.sendLineNotify(`新報名：${nickname} 報名 $${amount.value}，時間區間 ${earliestTime} ~ ${latestTime}`);
         
         // 檢查是否成桌
         this.checkForCompleteTable(amount.value);
@@ -266,12 +232,106 @@ class MahjongRegistrationSystem {
         }
     }
 
-    // 清除時間選擇
-    clearTimeSelection() {
-        document.querySelectorAll('.time-btn').forEach(btn => {
-            btn.classList.remove('active');
+    // 初始化時間選項
+    initializeTimeOptions() {
+        const earliestSelect = document.getElementById('earliestTime');
+        const latestSelect = document.getElementById('latestTime');
+        
+        if (!earliestSelect || !latestSelect) return;
+        
+        // 生成時間選項（30分鐘為單位）
+        const timeOptions = this.generateTimeOptions();
+        
+        // 清空選項
+        earliestSelect.innerHTML = '';
+        latestSelect.innerHTML = '';
+        
+        // 添加選項
+        timeOptions.forEach((time, index) => {
+            const earliestOption = new Option(time, time);
+            const latestOption = new Option(time, time);
+            
+            earliestSelect.add(earliestOption);
+            latestSelect.add(latestOption);
         });
-        document.getElementById('preferredTime').value = '';
+        
+        // 設定預設值
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        
+        // 找到下一個30分鐘的時間點
+        let nextHour = currentHour;
+        let nextMinute = Math.ceil((currentMinute + 1) / 30) * 30;
+        
+        if (nextMinute >= 60) {
+            nextHour += 1;
+            nextMinute = 0;
+        }
+        
+        const earliestDefault = `${String(nextHour).padStart(2, '0')}:${String(nextMinute).padStart(2, '0')}`;
+        
+        // 設定最晚時間為最早時間加3小時
+        let latestHour = nextHour + 3;
+        let latestMinute = nextMinute;
+        
+        if (latestHour >= 24) {
+            latestHour = latestHour - 24;
+        }
+        
+        const latestDefault = `${String(latestHour).padStart(2, '0')}:${String(latestMinute).padStart(2, '0')}`;
+        
+        // 設定預設值
+        earliestSelect.value = earliestDefault;
+        latestSelect.value = latestDefault;
+        
+        // 監聽最早時間變化，自動調整最晚時間
+        earliestSelect.addEventListener('change', () => {
+            this.adjustLatestTime();
+        });
+    }
+    
+    // 生成時間選項
+    generateTimeOptions() {
+        const options = [];
+        for (let hour = 0; hour < 24; hour++) {
+            for (let minute = 0; minute < 60; minute += 30) {
+                const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                options.push(time);
+            }
+        }
+        return options;
+    }
+    
+    // 調整最晚時間
+    adjustLatestTime() {
+        const earliestSelect = document.getElementById('earliestTime');
+        const latestSelect = document.getElementById('latestTime');
+        
+        if (!earliestSelect.value || !latestSelect.value) return;
+        
+        const earliestTime = earliestSelect.value;
+        const [earliestHour, earliestMinute] = earliestTime.split(':').map(Number);
+        
+        // 計算最早時間加3小時
+        let latestHour = earliestHour + 3;
+        let latestMinute = earliestMinute;
+        
+        if (latestHour >= 24) {
+            latestHour = latestHour - 24;
+        }
+        
+        const suggestedLatest = `${String(latestHour).padStart(2, '0')}:${String(latestMinute).padStart(2, '0')}`;
+        
+        // 如果當前最晚時間早於建議時間，則更新
+        if (latestSelect.value < earliestTime || latestSelect.value < suggestedLatest) {
+            latestSelect.value = suggestedLatest;
+        }
+    }
+    
+    // 重置時間區間
+    resetTimeRange() {
+        this.initializeTimeOptions();
     }
 
     // 檢查是否成桌
@@ -289,13 +349,20 @@ class MahjongRegistrationSystem {
 
     // 顯示成桌確認介面
     displayTableConfirmation(table) {
+        const timeRanges = table.players.map(player => {
+            if (player.earliestTime && player.latestTime) {
+                return `${player.earliestTime} ~ ${player.latestTime}`;
+            }
+            return '未設定';
+        });
+        
         const confirmationHtml = `
             <div class="table-confirmation" style="background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); border: 2px solid #ffd700; border-radius: 15px; padding: 20px; margin: 20px 0;">
                 <h3 style="color: #ffd700; margin-bottom: 15px;">🎯 成桌確認</h3>
                 <div style="color: #ffffff; margin-bottom: 15px;">
                     <p><strong>金額：</strong>$${table.amount}</p>
                     <p><strong>玩家：</strong>${table.players.map(p => p.nickname).join(', ')}</p>
-                    <p><strong>開打時間：</strong>${this.getMostCommonTime(table.players)}</p>
+                    <p><strong>時間區間：</strong>${timeRanges.join(', ')}</p>
                 </div>
                 <div class="confirmation-status" id="confirmation-${table.id}">
                     ${this.renderConfirmationStatus(table)}
@@ -305,7 +372,9 @@ class MahjongRegistrationSystem {
         
         // 在報名列表上方插入確認介面
         const registrationList = document.getElementById('registrationList');
-        registrationList.insertAdjacentHTML('afterbegin', confirmationHtml);
+        if (registrationList) {
+            registrationList.insertAdjacentHTML('afterbegin', confirmationHtml);
+        }
     }
 
     // 渲染確認狀態
@@ -316,8 +385,8 @@ class MahjongRegistrationSystem {
         if (playerConfirmation.status === 'pending' && table.players.some(p => p.id === currentUser?.id)) {
             return `
                 <div class="user-confirmation-buttons" style="display: flex; gap: 10px; justify-content: center;">
-                    <button onclick="registrationSystem.respondToTable(${table.id}, 'agreed')" class="action-btn confirm-btn">✅ 同意</button>
-                    <button onclick="registrationSystem.respondToTable(${table.id}, 'disagreed')" class="action-btn cancel-btn">❌ 不同意</button>
+                    <button onclick="window.registrationSystem.respondToTable(${table.id}, 'agreed')" class="action-btn confirm-btn">✅ 同意</button>
+                    <button onclick="window.registrationSystem.respondToTable(${table.id}, 'disagreed')" class="action-btn cancel-btn">❌ 不同意</button>
                 </div>
             `;
         } else if (playerConfirmation.status !== 'pending') {
@@ -488,19 +557,22 @@ class MahjongRegistrationSystem {
 
         listContainer.innerHTML = waitingRegistrations.map(reg => {
             const isCurrentUser = this.currentUser && reg.nickname === this.currentUser.displayName;
+            const timeRange = reg.earliestTime && reg.latestTime ? 
+                `${reg.earliestTime} ~ ${reg.latestTime}` : '未設定';
+            
             return `
                 <div class="registration-item">
                     <div class="registration-info">
                         <div class="registration-name">${reg.nickname}</div>
                         <div class="registration-amount">$${reg.amount}</div>
                         <div class="registration-time">${this.formatTime(reg.timestamp)}</div>
-                        <div class="registration-preferred-time">🕐 ${reg.preferredTime || '未設定'}</div>
+                        <div class="registration-preferred-time">🕐 ${timeRange}</div>
                     </div>
                     <span class="table-status waiting">等待中</span>
                     ${isCurrentUser ? `
                         <div class="user-actions">
-                            <button onclick="registrationSystem.cancelRegistration(${reg.id})" class="action-btn cancel-btn">取消報名</button>
-                            <button onclick="registrationSystem.changeRegistrationAmount(${reg.id})" class="action-btn change-btn">更改金額</button>
+                            <button onclick="window.registrationSystem.cancelRegistration(${reg.id})" class="action-btn cancel-btn">取消報名</button>
+                            <button onclick="window.registrationSystem.changeRegistrationAmount(${reg.id})" class="action-btn change-btn">更改金額</button>
                         </div>
                     ` : ''}
                 </div>
@@ -542,7 +614,7 @@ class MahjongRegistrationSystem {
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <span class="table-status ${statusClass}">${statusText}</span>
                         <div class="admin-registration-actions">
-                            <button class="action-btn delete" onclick="mahjongSystem.deleteRegistration(${reg.id})">
+                            <button class="action-btn delete" onclick="window.registrationSystem.deleteRegistration(${reg.id})">
                                 刪除
                             </button>
                         </div>
@@ -625,14 +697,19 @@ class MahjongRegistrationSystem {
 }
 
 // 初始化系統
-let mahjongSystem;
-document.addEventListener('DOMContentLoaded', () => {
-    mahjongSystem = new MahjongRegistrationSystem();
+let registrationSystem;
+
+// 頁面載入完成後初始化
+window.addEventListener('DOMContentLoaded', function() {
+    registrationSystem = new RegistrationSystem();
+    // 將系統物件設為全域變數，供按鈕事件使用
+    window.registrationSystem = registrationSystem;
+    registrationSystem.init();
 });
 
 // 定期更新UI（每30秒）
 setInterval(() => {
-    if (mahjongSystem) {
-        mahjongSystem.updateUI();
+    if (registrationSystem) {
+        registrationSystem.updateUI();
     }
 }, 30000);

@@ -444,8 +444,8 @@ body {
     }
 }
 
-/* 時間選擇器樣式 */
-.time-selector {
+/* 時間區間選擇器樣式 */
+.time-range-selector {
     background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
     border: 1px solid #3a3a3a;
     border-radius: 10px;
@@ -453,64 +453,45 @@ body {
     margin-bottom: 20px;
 }
 
-.quick-time-buttons {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 20px;
+.time-input-group {
+    margin-bottom: 15px;
 }
 
-.time-btn {
-    background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
-    border: 2px solid #4a4a4a;
-    color: #ffffff;
-    padding: 12px 8px;
-    border-radius: 8px;
+.time-input-group:last-child {
+    margin-bottom: 0;
+}
+
+.time-input-group label {
+    display: block;
+    color: #ffd700;
     font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    margin-bottom: 8px;
     font-size: 0.9rem;
 }
 
-.time-btn:hover {
-    background: linear-gradient(135deg, #4a4a4a 0%, #3a3a3a 100%);
-    border-color: #ffd700;
-    transform: translateY(-2px);
-}
-
-.time-btn.active {
-    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-    color: #000000;
-    border-color: #ffd700;
-}
-
-.custom-time-input {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 15px;
-    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-    border-radius: 8px;
-}
-
-.custom-time-input input[type="time"] {
+.time-input-group select {
+    width: 100%;
     background: #3a3a3a;
     border: 2px solid #4a4a4a;
     color: #ffffff;
-    padding: 8px 12px;
-    border-radius: 6px;
+    padding: 12px 15px;
+    border-radius: 8px;
     font-size: 1rem;
     font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-.custom-time-input input[type="time"]:focus {
+.time-input-group select:focus {
     outline: none;
     border-color: #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }
 
-.time-label {
-    color: #cccccc;
-    font-size: 0.9rem;
+.time-input-group select option {
+    background: #3a3a3a;
+    color: #ffffff;
+    padding: 10px;
 }
 
 /* 金額統計樣式 */
@@ -661,4 +642,389 @@ body {
 
 .logout-btn:hover {
     background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+}
+
+/* 管理後台專用樣式 */
+.admin-header {
+    background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%);
+    border: 2px solid #ffd700;
+    box-shadow: 0 8px 32px rgba(255, 215, 0, 0.2);
+}
+
+/* 登入對話框樣式 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+}
+
+.login-card {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 1px solid #3a3a3a;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.login-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    background: linear-gradient(45deg, #ffd700, #ffed4e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.login-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.cancel-btn {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cancel-btn:hover {
+    background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+    transform: translateY(-1px);
+}
+
+.error-message {
+    color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid #dc3545;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* 前台專用樣式 */
+.status-card {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 1px solid #3a3a3a;
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.readonly-form {
+    position: relative;
+}
+
+.readonly-notice {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+    color: #000;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.readonly-form input:disabled,
+.readonly-form select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.readonly-form input:disabled + .amount-btn,
+.readonly-form button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+}
+
+.user-status {
+    margin-top: 10px;
+    padding: 5px 10px;
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    border-radius: 5px;
+    font-size: 0.8rem;
+}
+
+/* 統計頁面樣式 */
+.stats-card {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 1px solid #3a3a3a;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.chart-container {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.chart {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.chart-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chart-bar {
+    width: 200px;
+    height: 20px;
+    background: #3a3a3a;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.chart-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.chart-label {
+    color: #ffffff;
+    font-size: 0.9rem;
+    min-width: 120px;
+}
+
+/* 管理後台專用樣式 */
+.quick-actions {
+    margin: 30px 0;
+}
+
+.quick-actions h3 {
+    color: #ffd700;
+    margin-bottom: 15px;
+}
+
+.action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.admin-btn.primary {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.admin-btn.secondary {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+}
+
+.recent-activity {
+    margin-top: 30px;
+}
+
+.recent-activity h3 {
+    color: #ffd700;
+    margin-bottom: 15px;
+}
+
+.activity-log {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    padding: 20px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #3a3a3a;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-time {
+    color: #888888;
+    font-size: 0.9rem;
+    min-width: 80px;
+}
+
+.activity-message {
+    color: #ffffff;
+    flex: 1;
+    margin-left: 10px;
+}
+
+/* 報名管理表格樣式 */
+.filter-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+}
+
+.bulk-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.registrations-table {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.registrations-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.registrations-table th,
+.registrations-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #3a3a3a;
+}
+
+.registrations-table th {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.registrations-table tr:hover {
+    background: rgba(255, 215, 0, 0.1);
+}
+
+/* 設定頁面樣式 */
+.settings-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.settings-group {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.settings-group h3 {
+    color: #ffd700;
+    margin-bottom: 15px;
+}
+
+.settings-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* 開關樣式 */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #3a3a3a;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #ffd700;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+/* 管理員登入按鈕樣式 */
+.admin-login-btn {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+    color: white !important;
+    border-color: #dc3545 !important;
+}
+
+.admin-login-btn:hover {
+    background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%) !important;
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3) !important;
 }

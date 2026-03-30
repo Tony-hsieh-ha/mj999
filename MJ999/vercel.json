@@ -1,24 +1,33 @@
 {
   "version": 2,
-  "name": "smart-matching-system",
+  "name": "mj999-admin-system",
   "builds": [
     {
-      "src": "**/*.{html,js,css,md}",
-      "use": "@vercel/static"
+      "src": "api.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/",
-      "dest": "/index.html"
+      "src": "/api/(.*)",
+      "dest": "/api.js"
     },
     {
-      "src": "/line-login",
-      "dest": "/line-login.html"
+      "src": "/admin",
+      "dest": "/admin.html"
     },
     {
-      "src": "/invite-system",
-      "dest": "/invite-system.html"
+      "src": "/(.*)",
+      "dest": "/$1"
     }
-  ]
+  ],
+  "env": {
+    "ADMIN_PASSWORD": "@admin_password",
+    "LINE_NOTIFY_TOKEN": "@line_notify_token"
+  },
+  "functions": {
+    "api.js": {
+      "maxDuration": 10
+    }
+  }
 }

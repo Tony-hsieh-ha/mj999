@@ -3,28 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>配對系統</title>
+    <title>智能配對系統 - 前台</title>
     <link rel="stylesheet" href="style.css">
     <script src="mock-api.js"></script>
 </head>
 <body>
     <div class="container">
         <header class="header">
-            <h1 class="title">� 智能配對系統</h1>
+            <h1 class="title">🎯 智能配對系統</h1>
             <div class="nav-buttons">
-                <button id="playerView" class="nav-btn active">玩家報名</button>
-                <button id="adminView" class="nav-btn">管理後台</button>
-                <button class="nav-btn" onclick="location.href='https://mj999-2168.vercel.app/invite-system.html'">配對約局</button>
+                <button id="playerView" class="nav-btn active">配對狀態</button>
+                <button id="statsView" class="nav-btn">統計資訊</button>
+                <button class="nav-btn admin-login-btn" onclick="location.href='admin.html'">🔐 管理</button>
             </div>
         </header>
 
         <main>
-            <!-- 玩家報名頁面 -->
+            <!-- 配對狀態頁面 -->
             <section id="playerSection" class="section active">
-                <div class="registration-card">
-                    <h2 class="card-title">立即報名</h2>
+                <div class="status-card">
+                    <h2 class="card-title">即時配對狀態</h2>
                     
-                    <!-- 用戶資訊顯示 -->
+                    <!-- 用戶登入區域 -->
                     <div id="userProfile" class="user-profile" style="display: none;">
                         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); border-radius: 10px;">
                             <img id="userAvatar" class="user-avatar-small" src="" alt="頭貼">
@@ -36,35 +36,35 @@
                     </div>
                     
                     <div id="loginPrompt" class="login-prompt">
-                        <p style="text-align: center; color: #cccccc; margin-bottom: 20px;">請先登入以使用報名功能</p>
+                        <p style="text-align: center; color: #cccccc; margin-bottom: 20px;">登入以查看您的配對狀態</p>
                         <div style="text-align: center;">
-                            <a href="https://mj999-2168.vercel.app/line-login.html" class="line-login-btn-small" style="display: inline-block; background: #06C755; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-bottom: 15px;">🟢 使用LINE登入</a>
+                            <a href="line-login.html" class="line-login-btn-small" style="display: inline-block; background: #06C755; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-bottom: 15px;">🟢 使用LINE登入</a>
                         </div>
                     </div>
                     
-                    <form id="registrationForm" style="display: none;">
-                        <div class="form-group" id="nicknameGroup" style="display: none;">
-                            <label for="nickname">暱稱</label>
-                            <input type="text" id="nickname" name="nickname" required placeholder="請輸入您的暱稱">
+                    <!-- 報名表單 (僅顯示，不可操作) -->
+                    <div id="registrationForm" class="readonly-form" style="display: none;">
+                        <div class="readonly-notice">
+                            <p>📋 此為前台查看模式，如需報名請聯繫管理員</p>
                         </div>
                         
                         <div class="form-group">
                             <label>選擇金額</label>
                             <div class="amount-options">
                                 <label class="amount-option">
-                                    <input type="radio" name="amount" value="30/10" required>
+                                    <input type="radio" name="amount" value="30/10" disabled>
                                     <span class="amount-btn">$30/10</span>
                                 </label>
                                 <label class="amount-option">
-                                    <input type="radio" name="amount" value="60/20" required>
+                                    <input type="radio" name="amount" value="60/20" disabled>
                                     <span class="amount-btn">$60/20</span>
                                 </label>
                                 <label class="amount-option">
-                                    <input type="radio" name="amount" value="100/20" required>
+                                    <input type="radio" name="amount" value="100/20" disabled>
                                     <span class="amount-btn">$100/20</span>
                                 </label>
                                 <label class="amount-option">
-                                    <input type="radio" name="amount" value="200/50" required>
+                                    <input type="radio" name="amount" value="200/50" disabled>
                                     <span class="amount-btn">$200/50</span>
                                 </label>
                             </div>
@@ -72,28 +72,28 @@
                         
                         <div class="form-group">
                             <label>希望開打時間</label>
-                            <div class="time-selector">
-                                <div class="quick-time-buttons">
-                                    <button type="button" class="time-btn" data-time="19:00">19:00</button>
-                                    <button type="button" class="time-btn" data-time="19:30">19:30</button>
-                                    <button type="button" class="time-btn" data-time="20:00">20:00</button>
-                                    <button type="button" class="time-btn" data-time="20:30">20:30</button>
-                                    <button type="button" class="time-btn" data-time="21:00">21:00</button>
-                                    <button type="button" class="time-btn" data-time="21:30">21:30</button>
+                            <div class="time-range-selector">
+                                <div class="time-input-group">
+                                    <label for="earliestTime">最早可開打時間</label>
+                                    <select id="earliestTime" disabled>
+                                        <!-- 動態生成時間選項 -->
+                                    </select>
                                 </div>
-                                <div class="custom-time-input">
-                                    <input type="time" id="preferredTime" min="00:00" max="23:59" required>
-                                    <span class="time-label">或自訂時間</span>
+                                <div class="time-input-group">
+                                    <label for="latestTime">最晚可開打時間</label>
+                                    <select id="latestTime" disabled>
+                                        <!-- 動態生成時間選項 -->
+                                    </select>
                                 </div>
                             </div>
                         </div>
                         
-                        <button type="submit" class="submit-btn">確認報名</button>
-                    </form>
+                        <button type="button" class="submit-btn" disabled>🔒 僅供查看</button>
+                    </div>
                 </div>
 
                 <div class="current-registrations">
-                    <h3>目前報名狀況</h3>
+                    <h3>目前配對狀況</h3>
                     
                     <!-- 金額統計 -->
                     <div class="amount-stats">
@@ -121,32 +121,34 @@
                 </div>
             </section>
 
-            <!-- 管理後台頁面 -->
-            <section id="adminSection" class="section">
-                <div class="admin-card">
-                    <h2 class="card-title">管理後台</h2>
+            <!-- 統計資訊頁面 -->
+            <section id="statsSection" class="section">
+                <div class="stats-card">
+                    <h2 class="card-title">📊 統計資訊</h2>
                     
-                    <div class="admin-stats">
+                    <div class="stats-grid">
                         <div class="stat-item">
                             <span class="stat-label">總報名人數</span>
                             <span id="totalCount" class="stat-value">0</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">待開桌</span>
+                            <span class="stat-label">等待配對</span>
                             <span id="pendingCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">已配對</span>
+                            <span id="matchedCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">配對中</span>
+                            <span id="playingCount" class="stat-value">0</span>
                         </div>
                     </div>
 
-                    <div class="admin-controls">
-                        <button id="createTable" class="admin-btn">手動配對</button>
-                        <button id="clearAll" class="admin-btn danger">清空所有報名</button>
-                        <button id="lineNotifySettings" class="admin-btn settings">LINE Notify 設定</button>
-                    </div>
-
-                    <div class="registrations-management">
-                        <h3>配對名單管理</h3>
-                        <div id="adminRegistrationList" class="admin-registration-list">
-                            <!-- 動態生成管理列表 -->
+                    <div class="chart-container">
+                        <h3>金額分佈圖</h3>
+                        <div id="amountChart" class="chart">
+                            <!-- 動態生成圖表 -->
                         </div>
                     </div>
                 </div>
@@ -157,6 +159,6 @@
         <div id="notification" class="notification"></div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="frontend.js"></script>
 </body>
 </html>
