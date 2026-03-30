@@ -126,7 +126,7 @@ class FrontendSystem {
             this.startAutoRefresh();
             this.startClock();
             this.startWaitingTimer();
-            this.startAutoSync(); // 新增自動同步
+            this.startAutoSync();
             
         } catch (error) {
             console.error('處理 LINE 登入回調時發生錯誤:', error);

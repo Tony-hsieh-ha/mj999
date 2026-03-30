@@ -202,6 +202,11 @@
                 if (userInfo) {
                     displayUserInfo(userInfo);
                     saveUserInfo(userInfo);
+                    
+                    // 登入成功後自動跳轉到 index.html
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000); // 2秒後跳轉，讓用戶看到登入成功訊息
                 } else {
                     showError();
                 }
@@ -225,7 +230,7 @@
                     body: new URLSearchParams({
                         'grant_type': 'authorization_code',
                         'code': code,
-                        'redirect_uri': 'https://mj999-2168.vercel.app/index.html',
+                        'redirect_uri': 'https://mj999-2168.vercel.app/', // 與 LINE 後台完全一致
                         'client_id': '2004473747',
                         'client_secret': 'a5ef8b23a930a8320c273f21badc78c2'
                     })
@@ -300,8 +305,8 @@
 
         // 繼續使用系統按鈕
         document.getElementById('continueBtn').addEventListener('click', function() {
-            // 直接跳轉到 index.html
-            window.location.href = 'https://mj999-2168.vercel.app/index.html';
+            // 跳轉到相對路徑，讓系統自動處理域名
+            window.location.href = 'index.html';
         });
 
         // 頁面載入時檢查URL參數
