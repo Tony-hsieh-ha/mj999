@@ -481,7 +481,7 @@ class APIRoutes {
             const LINE_CONFIG = {
                 clientId: '2004473747',
                 clientSecret: 'a5ef8b23a930a8320c273f21badc78c2', // 直接寫死的 LINE Channel Secret
-                redirectUri: 'https://mj999-2168.vercel.app/' // 請確保最後面有一個斜線 /
+                redirectUri: 'https://mj999-2168.vercel.app/' // 確認最後面有一個斜線，與 LINE 後台一致
             };
             
             // 向 LINE 請求 access token

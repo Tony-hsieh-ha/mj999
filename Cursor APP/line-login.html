@@ -170,7 +170,7 @@
         // LINE Login 設定
         const LINE_LOGIN_CONFIG = {
             channelId: '2004473747', // 保持原有的 Channel ID
-            redirectUri: 'https://mj999-2168.vercel.app/', // 與 LINE 後台完全一致，不要編碼
+            redirectUri: 'https://mj999-2168.vercel.app/', // 與 LINE 後台完全一致，確認最後有斜線
             state: 'login_' + Date.now(),
             scope: 'openid profile',
             nonce: 'nonce_' + Date.now()
@@ -294,7 +294,7 @@
             const authUrl = `https://access.line.me/oauth2/v2.1/authorize?` +
                 `response_type=code&` +
                 `client_id=${LINE_LOGIN_CONFIG.channelId}&` +
-                `redirect_uri=${encodeURIComponent(LINE_LOGIN_CONFIG.redirectUri)}&` +
+                `redirect_uri=${LINE_LOGIN_CONFIG.redirectUri}&` +
                 `state=${LINE_LOGIN_CONFIG.state}&` +
                 `scope=${LINE_LOGIN_CONFIG.scope}&` +
                 `nonce=${LINE_LOGIN_CONFIG.nonce}`;
