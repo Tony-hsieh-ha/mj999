@@ -305,7 +305,7 @@
             e.preventDefault();
             
             // --- 手動修正區開始 ---
-            const authUrl = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_LOGIN_CONFIG.channelId}&redirect_uri=https://mj999-2168.vercel.app/&state=${LINE_LOGIN_CONFIG.state}&scope=${LINE_LOGIN_CONFIG.scope}&nonce=${LINE_LOGIN_CONFIG.nonce}`;
+            const authUrl = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_LOGIN_CONFIG.channelId}&redirect_uri=${encodeURIComponent(LINE_LOGIN_CONFIG.redirectUri)}&state=${LINE_LOGIN_CONFIG.state}&scope=${LINE_LOGIN_CONFIG.scope}&nonce=${LINE_LOGIN_CONFIG.nonce}`;
 
             console.log("傳送的網址是:", authUrl); // 這行可以幫你在瀏覽器按 F12 檢查
             window.location.href = authUrl;
