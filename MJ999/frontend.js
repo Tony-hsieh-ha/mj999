@@ -13,6 +13,8 @@ class FrontendSystem {
         this.setupEventListeners();
         this.updateUI();
         this.startAutoRefresh();
+        this.startClock();
+        this.startWaitingTimer();
     }
 
     // 用戶管理
@@ -208,32 +210,70 @@ class FrontendSystem {
         const waitingRegistrations = this.registrations.filter(reg => reg.status === 'waiting');
 
         if (waitingRegistrations.length === 0) {
-            listContainer.innerHTML = '<p style="text-align: center; color: #888;">目前無人報名</p>';
+            listContainer.innerHTML = '<p style="text-align: center; color: #888; font-size: 1.2rem;">目前無人報名</p>';
             return;
         }
 
-        listContainer.innerHTML = waitingRegistrations.map(reg => {
-            const isCurrentUser = this.currentUser && reg.nickname === this.currentUser.displayName;
-            const timeRange = reg.earliestTime && reg.latestTime ? 
-                `${reg.earliestTime} ~ ${reg.latestTime}` : '未設定';
+        // 按金額分組
+        const amountGroups = {};
+        waitingRegistrations.forEach(reg => {
+            if (!amountGroups[reg.amount]) {
+                amountGroups[reg.amount] = [];
+            }
+            amountGroups[reg.amount].push(reg);
+        });
+
+        listContainer.innerHTML = Object.entries(amountGroups).map(([amount, players]) => {
+            const isNearComplete = players.length === 3;
+            const timeRanges = players.map(p => {
+                return p.earliestTime && p.latestTime ? 
+                    `${p.earliestTime} ~ ${p.latestTime}` : '未設定';
+            });
             
             return `
-                <div class="registration-item">
-                    <div class="registration-info">
-                        <div class="registration-name">${reg.nickname}</div>
-                        <div class="registration-amount">$${reg.amount}</div>
-                        <div class="registration-time">${this.formatTime(reg.timestamp)}</div>
-                        <div class="registration-preferred-time">🕐 ${timeRange}</div>
+                <div class="table-status-card ${isNearComplete ? 'near-complete' : ''}">
+                    <div class="table-header">
+                        <h4 class="table-amount">$${amount}</h4>
+                        <span class="table-count">${players.length}/4 人</span>
+                        ${isNearComplete ? '<span class="near-complete-badge">3 缺 1</span>' : ''}
                     </div>
-                    <span class="table-status waiting">等待中</span>
-                    ${isCurrentUser ? `
-                        <div class="user-status">
-                            <span style="color: #ffd700; font-size: 0.9rem;">👤 您的報名</span>
-                        </div>
-                    ` : ''}
+                    <div class="players-list">
+                        ${players.map(player => {
+                            const isCurrentUser = this.currentUser && player.nickname === this.currentUser.displayName;
+                            const isBlacklisted = this.isPlayerBlacklisted(player.nickname);
+                            const playerRating = this.getPlayerRating(player.nickname);
+                            
+                            return `
+                                <div class="player-item ${isCurrentUser ? 'current-user' : ''} ${isBlacklisted ? 'blacklisted' : ''}">
+                                    <div class="player-avatar">
+                                        ${isCurrentUser && this.currentUser?.pictureUrl ? 
+                                            `<img src="${this.currentUser.pictureUrl}" alt="${player.nickname}">` : 
+                                            `<div class="avatar-placeholder">${player.nickname[0]}</div>`
+                                        }
+                                        <div class="player-rating-dot rating-${playerRating}"></div>
+                                    </div>
+                                    <div class="player-info">
+                                        <div class="player-name">
+                                            ${player.nickname}
+                                            ${isBlacklisted ? '<span class="blacklist-warning">⚠️ 黑名單</span>' : ''}
+                                        </div>
+                                        <div class="player-time">🕐 ${timeRanges[players.indexOf(player)]}</div>
+                                        <div class="player-rating">戰力：${playerRating}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    ${isNearComplete ? '<div class="near-complete-indicator">🔴 紅色呼吸效果</div>' : ''}
                 </div>
             `;
         }).join('');
+        
+        // 檢查是否需要顯示 3 缺 1 閃爍提示
+        this.checkNearCompleteAlert();
+        
+        // 更新候補計時清單
+        this.updateWaitingTimerList();
     }
 
     // 更新統計資訊
@@ -298,7 +338,137 @@ class FrontendSystem {
         }, 3000);
     }
 
-    // 格式化時間
+    // 啟動候補計時器
+    startWaitingTimer() {
+        setInterval(() => {
+            this.updateWaitingTimerList();
+        }, 60000); // 每分鐘更新一次
+    }
+
+    // 更新候補計時清單
+    updateWaitingTimerList() {
+        const timerList = document.getElementById('waitingTimerList');
+        if (!timerList) return;
+        
+        const waitingRegistrations = this.registrations.filter(reg => reg.status === 'waiting');
+        
+        if (waitingRegistrations.length === 0) {
+            timerList.innerHTML = '<p style="text-align: center; color: #888; font-size: 1.1rem;">目前無人等待</p>';
+            return;
+        }
+        
+        // 按等待時間排序
+        const sortedPlayers = waitingRegistrations.map(player => {
+            const waitMinutes = this.getWaitingMinutes(player.nickname);
+            return {
+                ...player,
+                waitMinutes
+            };
+        }).sort((a, b) => b.waitMinutes - a.waitMinutes);
+        
+        timerList.innerHTML = sortedPlayers.map(player => {
+            const waitMinutes = player.waitMinutes;
+            const isOver30Minutes = waitMinutes >= 30;
+            const playerRating = this.getPlayerRating(player.nickname);
+            
+            return `
+                <div class="waiting-timer-item ${isOver30Minutes ? 'over-30-minutes' : ''}">
+                    <div class="timer-info">
+                        <div class="timer-name">
+                            ${player.nickname}
+                            <div class="timer-rating-dot rating-${playerRating}"></div>
+                        </div>
+                        <div class="timer-amount">$${player.amount}</div>
+                    </div>
+                    <div class="timer-time ${isOver30Minutes ? 'warning' : ''}">
+                        <div class="timer-minutes">${waitMinutes}</div>
+                        <div class="timer-unit">分鐘</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // 獲取等待分鐘數
+    getWaitingMinutes(playerName) {
+        // 使用 Mock API 的候補計時系統
+        if (typeof mockAPI !== 'undefined') {
+            return mockAPI.getWaitingMinutes(playerName);
+        }
+        return 0;
+    }
+
+    // 檢查是否為黑名單玩家
+    isPlayerBlacklisted(playerName) {
+        if (typeof mockAPI !== 'undefined') {
+            return mockAPI.isBlacklisted(playerName);
+        }
+        return false;
+    }
+
+    // 獲取玩家戰力分級
+    getPlayerRating(playerName) {
+        if (typeof mockAPI !== 'undefined') {
+            return mockAPI.getPlayerRating(playerName);
+        }
+        return '新手';
+    }
+    checkNearCompleteAlert() {
+        const alertElement = document.getElementById('nearCompleteAlert');
+        if (!alertElement) return;
+        
+        const waitingRegistrations = this.registrations.filter(reg => reg.status === 'waiting');
+        const amountGroups = {};
+        
+        waitingRegistrations.forEach(reg => {
+            if (!amountGroups[reg.amount]) {
+                amountGroups[reg.amount] = [];
+            }
+            amountGroups[reg.amount].push(reg);
+        });
+        
+        // 檢查是否有 3 缺 1 的情況
+        const hasNearComplete = Object.values(amountGroups).some(players => players.length === 3);
+        
+        if (hasNearComplete) {
+            alertElement.style.display = 'block';
+            
+            // 5 秒後自動隱藏
+            setTimeout(() => {
+                alertElement.style.display = 'none';
+            }, 5000);
+        } else {
+            alertElement.style.display = 'none';
+        }
+    }
+    startClock() {
+        const updateClock = () => {
+            const now = new Date();
+            const clockDisplay = document.getElementById('clockDisplay');
+            
+            if (clockDisplay) {
+                const time = now.toLocaleTimeString('zh-TW', { 
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                const date = now.toLocaleDateString('zh-TW', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+                
+                clockDisplay.innerHTML = `
+                    <div class="time">${time}</div>
+                    <div class="date">${date}</div>
+                `;
+            }
+        };
+        
+        updateClock();
+        setInterval(updateClock, 1000);
+    }
     formatTime(timestamp) {
         const date = new Date(timestamp);
         const now = new Date();

@@ -127,6 +127,10 @@ class AdminSystem {
             this.createTable();
         });
 
+        document.getElementById('clearTable').addEventListener('click', () => {
+            this.clearTable();
+        });
+
         document.getElementById('clearAll').addEventListener('click', () => {
             if (confirm('確定要清空所有報名嗎？')) {
                 this.clearAllRegistrations();
@@ -169,6 +173,20 @@ class AdminSystem {
 
         document.getElementById('changePassword').addEventListener('click', () => {
             this.changeAdminPassword();
+        });
+
+        // 黑名單管理
+        document.getElementById('addToBlacklist').addEventListener('click', () => {
+            this.addToBlacklist();
+        });
+
+        // 戰力分級設定
+        document.getElementById('setPlayerRating').addEventListener('click', () => {
+            this.setPlayerRating();
+        });
+        document.getElementById('autoLineNotify').addEventListener('change', (e) => {
+            this.settings.autoLineNotify = e.target.checked;
+            this.saveSettings();
         });
 
         // 篩選器
@@ -313,23 +331,148 @@ class AdminSystem {
     // 設定管理
     loadSettings() {
         const saved = localStorage.getItem('adminSettings');
-        return saved ? JSON.parse(saved) : {
+        const defaultSettings = {
             autoMatch: false,
             maxPlayers: 4,
-            sessionTimeout: 60
+            sessionTimeout: 60,
+            autoLineNotify: true
         };
+        
+        this.settings = saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
+        
+        // 更新 UI 狀態
+        this.updateSettingsUI();
     }
 
+    // 更新設定 UI
+    updateSettingsUI() {
+        const autoMatch = document.getElementById('autoMatch');
+        const maxPlayers = document.getElementById('maxPlayers');
+        const sessionTimeout = document.getElementById('sessionTimeout');
+        const autoLineNotify = document.getElementById('autoLineNotify');
+        const lineNotifyToken = document.getElementById('lineNotifyToken');
+        
+        if (autoMatch) autoMatch.checked = this.settings.autoMatch;
+        if (maxPlayers) maxPlayers.value = this.settings.maxPlayers;
+        if (sessionTimeout) sessionTimeout.value = this.settings.sessionTimeout;
+        if (autoLineNotify) autoLineNotify.checked = this.settings.autoLineNotify;
+        if (lineNotifyToken) lineNotifyToken.value = this.lineNotifyToken || '';
+    }
+
+    // 黑名單管理
+    addToBlacklist() {
+        const playerName = document.getElementById('blacklistPlayer').value.trim();
+        const reason = document.getElementById('blacklistReason').value;
+        
+        if (!playerName) {
+            this.showNotification('請輸入玩家名稱', 'error');
+            return;
+        }
+        
+        if (typeof mockAPI !== 'undefined') {
+            const success = mockAPI.addToBlacklist(playerName, reason);
+            if (success) {
+                this.showNotification(`已將 ${playerName} 加入黑名單`, 'success');
+                this.logActivity(`加入黑名單：${playerName} (${reason})`, 'warning');
+                document.getElementById('blacklistPlayer').value = '';
+                this.updateBlacklistList();
+            } else {
+                this.showNotification(`${playerName} 已在黑名單中`, 'error');
+            }
+        }
+    }
+
+    // 更新黑名單清單
+    updateBlacklistList() {
+        const blacklistList = document.getElementById('blacklistList');
+        if (!blacklistList) return;
+        
+        if (typeof mockAPI !== 'undefined') {
+            const blacklist = mockAPI.blacklist;
+            
+            if (blacklist.length === 0) {
+                blacklistList.innerHTML = '<p style="color: #888; text-align: center;">黑名單為空</p>';
+                return;
+            }
+            
+            blacklistList.innerHTML = blacklist.map(player => `
+                <div class="blacklist-item">
+                    <div class="blacklist-info">
+                        <span class="blacklist-name">${player.name}</span>
+                        <span class="blacklist-reason">${player.reason}</span>
+                        <span class="blacklist-date">${new Date(player.timestamp).toLocaleDateString('zh-TW')}</span>
+                    </div>
+                    <button class="admin-btn danger small" onclick="window.adminSystem.removeFromBlacklist('${player.name}')">移除</button>
+                </div>
+            `).join('');
+        }
+    }
+
+    // 從黑名單移除
+    removeFromBlacklist(playerName) {
+        if (confirm(`確定要將 ${playerName} 從黑名單移除嗎？`)) {
+            if (typeof mockAPI !== 'undefined') {
+                const success = mockAPI.removeFromBlacklist(playerName);
+                if (success) {
+                    this.showNotification(`已將 ${playerName} 從黑名單移除`, 'success');
+                    this.logActivity(`移除黑名單：${playerName}`, 'success');
+                    this.updateBlacklistList();
+                }
+            }
+        }
+    }
+
+    // 設定玩家戰力分級
+    setPlayerRating() {
+        const playerName = document.getElementById('ratingPlayerName').value.trim();
+        const rating = document.getElementById('playerRating').value;
+        
+        if (!playerName) {
+            this.showNotification('請輸入玩家名稱', 'error');
+            return;
+        }
+        
+        if (typeof mockAPI !== 'undefined') {
+            mockAPI.setPlayerRating(playerName, rating);
+            this.showNotification(`已設定 ${playerName} 的戰力為 ${rating}`, 'success');
+            this.logActivity(`設定戰力：${playerName} -> ${rating}`, 'success');
+            document.getElementById('ratingPlayerName').value = '';
+        }
+    }
+    clearTable() {
+        if (confirm('確定要清空/結算所有桌子嗎？這將把所有遊戲中的桌子重設為空桌狀態。')) {
+            // 將所有遊戲中的桌子重設為空桌
+            this.registrations.forEach(reg => {
+                if (reg.status === 'playing' || reg.status === 'matched') {
+                    reg.status = 'waiting';
+                    reg.timestamp = new Date().toISOString();
+                }
+            });
+            
+            // 清空桌子記錄
+            this.tables = [];
+            
+            this.saveData();
+            this.updateUI();
+            this.showNotification('已清空/結算所有桌子', 'success');
+            this.logActivity('一鍵清空/結算所有桌子', 'success');
+            
+            // 檢查是否需要發送差一人通知
+            this.checkNearCompleteNotification();
+        }
+    }
     saveSettings() {
-        const autoMatch = document.getElementById('autoMatch').checked;
-        const maxPlayers = document.getElementById('maxPlayers').value;
-        const sessionTimeout = document.getElementById('sessionTimeout').value;
-        const lineNotifyToken = document.getElementById('lineNotifyToken').value;
+        const autoMatch = document.getElementById('autoMatch')?.checked;
+        const maxPlayers = document.getElementById('maxPlayers')?.value;
+        const sessionTimeout = document.getElementById('sessionTimeout')?.value;
+        const autoLineNotify = document.getElementById('autoLineNotify')?.checked;
+        const lineNotifyToken = document.getElementById('lineNotifyToken')?.value;
 
         this.settings = {
-            autoMatch,
-            maxPlayers: parseInt(maxPlayers),
-            sessionTimeout: parseInt(sessionTimeout)
+            autoMatch: autoMatch !== undefined ? autoMatch : this.settings.autoMatch,
+            maxPlayers: maxPlayers ? parseInt(maxPlayers) : this.settings.maxPlayers,
+            sessionTimeout: sessionTimeout ? parseInt(sessionTimeout) : this.settings.sessionTimeout,
+            autoLineNotify: autoLineNotify !== undefined ? autoLineNotify : this.settings.autoLineNotify
         };
 
         localStorage.setItem('adminSettings', JSON.stringify(this.settings));
@@ -410,6 +553,8 @@ class AdminSystem {
     updateUI() {
         this.updateDashboardStats();
         this.updateRegistrationsTable();
+        this.updateBlacklistList();
+        this.updateSettingsUI();
         this.updateActivityLog();
     }
 
@@ -499,6 +644,11 @@ class AdminSystem {
 
     // 檢查是否需要發送差一人通知
     checkNearCompleteNotification() {
+        // 檢查是否開啟自動通知
+        if (!this.settings.autoLineNotify) {
+            return;
+        }
+        
         // 使用 Mock API 檢查
         if (typeof mockAPI !== 'undefined') {
             mockAPI.checkAndNotifyNearComplete();

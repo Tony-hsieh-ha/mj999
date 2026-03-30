@@ -4,6 +4,9 @@ class MockAPI {
         this.tables = this.loadTables();
         this.lineNotifyToken = null;
         this.notificationCooldown = new Map(); // 防刷版機制
+        this.blacklist = this.loadBlacklist(); // 黑名單系統
+        this.playerRatings = this.loadPlayerRatings(); // 戰力分級
+        this.waitingList = this.loadWaitingList(); // 候補清單
         this.initLineNotify();
     }
 
@@ -92,7 +95,7 @@ class MockAPI {
                 // 檢查是否在冷卻時間內
                 if (!this.isNotificationCooldown(cooldownKey)) {
                     const playerNames = players.map(p => p.nickname).join(', ');
-                    const message = `【MJ999 揪團】目前有一桌差 1 人！地點：[店名/桌號]，想打的快來報名！\n\n目前玩家：${playerNames}\n金額：$${amount}`;
+                    const message = `【MJ999 揪團】目前有一桌 3 缺 1！想打的快來報名！地點：[預設店名]\n\n目前玩家：${playerNames}\n金額：$${amount}`;
                     
                     // 發送通知
                     const result = await this.sendLineNotification(message);
@@ -101,13 +104,134 @@ class MockAPI {
                         // 設置冷卻時間
                         this.setNotificationCooldown(cooldownKey);
                         console.log(`已發送差一人通知：$${amount}`);
+                        
+                        // 記錄通知日誌
+                        this.logNotification(amount, players, '3缺1');
                     }
                 }
             }
         }
     }
 
-    // 載入桌子資料
+    // 記錄通知日誌
+    logNotification(amount, players, type) {
+        const notification = {
+            amount,
+            players: players.map(p => p.nickname),
+            type,
+            timestamp: new Date().toISOString()
+        };
+        
+        // 儲存通知日誌
+        const notifications = JSON.parse(localStorage.getItem('notificationLog') || '[]');
+        notifications.unshift(notification);
+        
+        // 只保留最近 50 條記錄
+        if (notifications.length > 50) {
+            notifications.splice(50);
+        }
+        
+        localStorage.setItem('notificationLog', JSON.stringify(notifications));
+    }
+
+    // 獲取通知日誌
+    getNotificationLog() {
+        return JSON.parse(localStorage.getItem('notificationLog') || '[]');
+    }
+
+    // 黑名單系統
+    loadBlacklist() {
+        const saved = localStorage.getItem('blacklist');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    saveBlacklist() {
+        localStorage.setItem('blacklist', JSON.stringify(this.blacklist));
+    }
+
+    addToBlacklist(playerName, reason = '放鳥') {
+        if (!this.blacklist.find(p => p.name === playerName)) {
+            this.blacklist.push({
+                name: playerName,
+                reason: reason,
+                timestamp: new Date().toISOString(),
+                addedBy: '管理員'
+            });
+            this.saveBlacklist();
+            return true;
+        }
+        return false;
+    }
+
+    removeFromBlacklist(playerName) {
+        const index = this.blacklist.findIndex(p => p.name === playerName);
+        if (index > -1) {
+            this.blacklist.splice(index, 1);
+            this.saveBlacklist();
+            return true;
+        }
+        return false;
+    }
+
+    isBlacklisted(playerName) {
+        return this.blacklist.some(p => p.name === playerName);
+    }
+
+    getBlacklistInfo(playerName) {
+        return this.blacklist.find(p => p.name === playerName);
+    }
+
+    // 戰力分級系統
+    loadPlayerRatings() {
+        const saved = localStorage.getItem('playerRatings');
+        return saved ? JSON.parse(saved) : {};
+    }
+
+    savePlayerRatings() {
+        localStorage.setItem('playerRatings', JSON.stringify(this.playerRatings));
+    }
+
+    setPlayerRating(playerName, rating) {
+        this.playerRatings[playerName] = {
+            rating: rating,
+            timestamp: new Date().toISOString()
+        };
+        this.savePlayerRatings();
+    }
+
+    getPlayerRating(playerName) {
+        return this.playerRatings[playerName]?.rating || '新手';
+    }
+
+    // 候補計時系統
+    loadWaitingList() {
+        const saved = localStorage.getItem('waitingList');
+        return saved ? JSON.parse(saved) : {};
+    }
+
+    saveWaitingList() {
+        localStorage.setItem('waitingList', JSON.stringify(this.waitingList));
+    }
+
+    addToWaitingList(playerName, timestamp = null) {
+        this.waitingList[playerName] = timestamp || new Date().toISOString();
+        this.saveWaitingList();
+    }
+
+    removeFromWaitingList(playerName) {
+        delete this.waitingList[playerName];
+        this.saveWaitingList();
+    }
+
+    getWaitingMinutes(playerName) {
+        const timestamp = this.waitingList[playerName];
+        if (!timestamp) return 0;
+        
+        const now = new Date();
+        const waitTime = new Date(timestamp);
+        const diffMinutes = Math.floor((now - waitTime) / (1000 * 60));
+        return diffMinutes;
+    }
     loadTables() {
         const savedTables = localStorage.getItem('mockTables');
         return savedTables ? JSON.parse(savedTables) : [];

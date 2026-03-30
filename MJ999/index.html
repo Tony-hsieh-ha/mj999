@@ -118,6 +118,34 @@
                     <div id="registrationList" class="registration-list">
                         <!-- 動態生成報名列表 -->
                     </div>
+
+                    <!-- 3 缺 1 紅色閃爍提示 -->
+                    <div id="nearCompleteAlert" class="near-complete-alert" style="display: none;">
+                        <div class="alert-content">
+                            <div class="alert-icon">🔴</div>
+                            <div class="alert-text">
+                                <h3>3 缺 1！</h3>
+                                <p>目前有一桌差一人滿桌，想打的快來報名！</p>
+                            </div>
+                            <div class="alert-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 即時時鐘 -->
+                <div class="realtime-clock">
+                    <div class="clock-display" id="clockDisplay">
+                        <div class="time">00:00:00</div>
+                        <div class="date">2024-01-01</div>
+                    </div>
+                </div>
+
+                <!-- 候補計時清單 -->
+                <div class="waiting-timer-section">
+                    <h3>⏱️ 等待中玩家</h3>
+                    <div id="waitingTimerList" class="waiting-timer-list">
+                        <!-- 動態生成等待中玩家清單 -->
+                    </div>
                 </div>
             </section>
 

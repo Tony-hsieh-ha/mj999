@@ -1,3 +1,112 @@
+// LINE Notify 通知函式
+class LineNotifyService {
+    constructor() {
+        this.token = null;
+        this.initToken();
+    }
+
+    // 初始化 Token
+    initToken() {
+        // 從環境變數獲取 Token
+        if (typeof process !== 'undefined' && process.env?.LINE_NOTIFY_TOKEN) {
+            this.token = process.env.LINE_NOTIFY_TOKEN;
+        } else {
+            // 從 localStorage 獲取（開發用）
+            this.token = localStorage.getItem('lineNotifyToken') || '';
+        }
+    }
+
+    // 發送 LINE Notify 通知
+    async sendNotification(message) {
+        if (!this.token) {
+            console.warn('LINE Notify Token 未設定');
+            return { success: false, message: 'Token 未設定' };
+        }
+
+        try {
+            const response = await fetch('https://notify-api.line.me/api/notify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: `message=${encodeURIComponent(message)}`
+            });
+
+            if (response.ok) {
+                console.log('LINE Notify 發送成功:', message);
+                return { success: true, message: '通知發送成功' };
+            } else {
+                const errorText = await response.text();
+                console.error('LINE Notify 發送失敗:', errorText);
+                return { success: false, message: `發送失敗: ${errorText}` };
+            }
+        } catch (error) {
+            console.error('LINE Notify 發送錯誤:', error);
+            return { success: false, message: `發送錯誤: ${error.message}` };
+        }
+    }
+
+    // 發送 3 缺 1 通知
+    async sendNearCompleteNotification(amount, players, location = '[預設店名]') {
+        const playerNames = players.map(p => p.nickname).join(', ');
+        const message = `【MJ999 揪團】目前有一桌 3 缺 1！想打的快來報名！地點：${location}\n\n目前玩家：${playerNames}\n金額：$${amount}`;
+        
+        return await this.sendNotification(message);
+    }
+
+    // 發送開桌通知
+    async sendTableStartNotification(players, location = '[預設店名]') {
+        const playerNames = players.map(p => p.nickname).join(', ');
+        const message = `【MJ999 開桌】桌子已開始遊戲！\n\n玩家：${playerNames}\n地點：${location}`;
+        
+        return await this.sendNotification(message);
+    }
+
+    // 發送系統通知
+    async sendSystemNotification(message) {
+        const systemMessage = `【MJ999 系統】${message}`;
+        return await this.sendNotification(systemMessage);
+    }
+
+    // 測試通知
+    async testNotification() {
+        const testMessage = `【MJ999 測試】LINE Notify 功能正常！\n\n測試時間：${new Date().toLocaleString('zh-TW')}`;
+        return await this.sendNotification(testMessage);
+    }
+
+    // 更新 Token
+    updateToken(newToken) {
+        this.token = newToken;
+        localStorage.setItem('lineNotifyToken', newToken);
+    }
+
+    // 檢查 Token 狀態
+    async checkTokenStatus() {
+        if (!this.token) {
+            return { valid: false, message: 'Token 未設定' };
+        }
+
+        try {
+            const response = await fetch('https://notify-api.line.me/api/status', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                return { valid: true, data };
+            } else {
+                return { valid: false, message: 'Token 無效' };
+            }
+        } catch (error) {
+            return { valid: false, message: `檢查錯誤: ${error.message}` };
+        }
+    }
+}
+
 // API 安全保護機制
 class SecureAPI {
     constructor() {

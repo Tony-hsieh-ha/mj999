@@ -1017,14 +1017,547 @@ input:checked + .slider:before {
     transform: translateX(26px);
 }
 
-/* 管理員登入按鈕樣式 */
-.admin-login-btn {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
-    color: white !important;
-    border-color: #dc3545 !important;
+/* 桌況卡片樣式（大螢幕優化） */
+.table-status-card {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 2px solid #3a3a3a;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
-.admin-login-btn:hover {
-    background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%) !important;
-    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3) !important;
+.table-status-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.table-status-card.near-complete {
+    border-color: #ff4444;
+    animation: borderPulse 2s infinite;
+}
+
+@keyframes borderPulse {
+    0%, 100% {
+        border-color: #ff4444;
+        box-shadow: 0 8px 32px rgba(255, 68, 68, 0.3);
+    }
+    50% {
+        border-color: #ff8888;
+        box-shadow: 0 8px 32px rgba(255, 136, 136, 0.5);
+    }
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #3a3a3a;
+}
+
+.table-amount {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #ffd700;
+    margin: 0;
+}
+
+.table-count {
+    font-size: 1.5rem;
+    color: #ffffff;
+    background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
+    padding: 8px 15px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.near-complete-badge {
+    background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+}
+
+.players-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+.player-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.player-item:hover {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    transform: translateY(-1px);
+}
+
+.player-item.current-user {
+    border-color: #ffd700;
+    background: linear-gradient(135deg, #2a2a1a 0%, #1a1a0a 100%);
+}
+
+.player-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #3a3a3a;
+    flex-shrink: 0;
+}
+
+.player-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #000000;
+}
+
+.player-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.player-name {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #ffffff;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.player-time {
+    font-size: 1rem;
+    color: #888888;
+}
+
+.near-complete-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #ff4444;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* 即時時鐘樣式 */
+.realtime-clock {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 2px solid #ffd700;
+    border-radius: 15px;
+    padding: 15px 25px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    min-width: 200px;
+}
+
+.clock-display {
+    text-align: center;
+}
+
+.clock-display .time {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #ffd700;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 5px;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.clock-display .date {
+    font-size: 1rem;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+/* 3 缺 1 紅色閃爍提示樣式 */
+.near-complete-alert {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    animation: alertPulse 2s infinite;
+}
+
+.alert-content {
+    background: linear-gradient(135deg, rgba(255, 0, 0, 0.9) 0%, rgba(139, 0, 0, 0.9) 100%);
+    border: 3px solid #ff0000;
+    border-radius: 20px;
+    padding: 30px 40px;
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+    position: relative;
+    overflow: hidden;
+    min-width: 400px;
+    text-align: center;
+}
+
+.alert-icon {
+    font-size: 4rem;
+    margin-bottom: 15px;
+    animation: iconBounce 1s infinite;
+}
+
+.alert-text h3 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #ffffff;
+    margin: 0 0 10px 0;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.alert-text p {
+    font-size: 1.5rem;
+    color: #ffffff;
+    margin: 0;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+}
+
+.alert-pulse {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    animation: pulseRotate 3s linear infinite;
+}
+
+@keyframes alertPulse {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.05);
+        opacity: 0.8;
+    }
+}
+
+@keyframes iconBounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes pulseRotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* 候補計時清單樣式 */
+.waiting-timer-section {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 2px solid #3a3a3a;
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.waiting-timer-section h3 {
+    color: #ffd700;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.waiting-timer-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.waiting-timer-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.waiting-timer-item:hover {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    transform: translateY(-1px);
+}
+
+.waiting-timer-item.over-30-minutes {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0.1) 100%);
+    border-color: #ffc107;
+}
+
+.timer-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.timer-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.timer-amount {
+    font-size: 1rem;
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.timer-time {
+    text-align: center;
+    min-width: 80px;
+}
+
+.timer-minutes {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #ffffff;
+    line-height: 1;
+}
+
+.timer-unit {
+    font-size: 0.9rem;
+    color: #888888;
+    margin-top: 2px;
+}
+
+.timer-time.warning .timer-minutes {
+    color: #ffc107;
+    animation: warningPulse 2s infinite;
+}
+
+@keyframes warningPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* 戰力分級樣式 */
+.player-rating-dot {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #1a1a1a;
+    z-index: 10;
+}
+
+.timer-rating-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid #1a1a1a;
+}
+
+.rating-新手 {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+}
+
+.rating-普通 {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+}
+
+.rating-快手 {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.rating-高手 {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+}
+
+.player-rating {
+    font-size: 0.9rem;
+    color: #888888;
+    margin-top: 3px;
+}
+
+/* 黑名單樣式 */
+.player-item.blacklisted {
+    border-color: #dc3545 !important;
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(220, 53, 69, 0.05) 100%) !important;
+}
+
+.blacklist-warning {
+    background: #dc3545;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-left: 8px;
+    animation: warningBlink 1s infinite;
+}
+
+@keyframes warningBlink {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* 黑名單管理樣式 */
+.blacklist-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.blacklist-controls input {
+    flex: 1;
+    min-width: 150px;
+}
+
+.blacklist-controls select {
+    min-width: 100px;
+}
+
+.blacklist-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.blacklist-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+}
+
+.blacklist-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.blacklist-name {
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.blacklist-reason {
+    font-size: 0.9rem;
+    color: #dc3545;
+}
+
+.blacklist-date {
+    font-size: 0.8rem;
+    color: #888888;
+}
+
+/* 戰力分級管理樣式 */
+.rating-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.rating-controls input {
+    flex: 1;
+    min-width: 150px;
+}
+
+.rating-controls select {
+    min-width: 100px;
+}
+
+/* 遊戲狀態顏色管理 */
+.table-status.playing {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    color: white !important;
+    border-color: #28a745 !important;
+}
+
+.table-status.waiting {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%) !important;
+    color: #000000 !important;
+    border-color: #ffc107 !important;
+}
+
+.table-status.empty {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+    color: white !important;
+    border-color: #6c757d !important;
 }
