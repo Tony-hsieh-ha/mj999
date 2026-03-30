@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能配對系統 - 前台</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="mock-api.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">🎯 智能配對系統</h1>
+            
+            <!-- 霓虹燈跑馬燈 -->
+            <div class="neon-ticker" id="neonTicker">
+                <div class="ticker-content" id="tickerContent">
+                    <span class="ticker-text">🎰 歡迎來到 MJ999 遊戲大廳 🎰</span>
+                </div>
+            </div>
+            
+            <div class="nav-buttons">
+                <button id="playerView" class="nav-btn active">配對狀態</button>
+                <button id="statsView" class="nav-btn">統計資訊</button>
+                <button class="nav-btn admin-login-btn" onclick="location.href='admin.html'">🔐 管理</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- 遊戲大廳頁面 -->
+            <section id="playerSection" class="section active">
+                <div class="lobby-header">
+                    <h1 class="lobby-title">
+                        <span class="title-icon">🎰</span>
+                        MJ999 遊戲大廳
+                    </h1>
+                    <div class="user-info" id="userInfo">
+                        <!-- 用戶資訊 -->
+                    </div>
+                </div>
+
+                <div class="room-list-container">
+                    <div class="room-list-header">
+                        <h2 class="room-list-title">🎲 房間列表</h2>
+                        <div class="room-stats">
+                            <span class="stat-item">總房間: <span id="totalRooms">0</span></span>
+                            <span class="stat-item">等待中: <span id="waitingRooms">0</span></span>
+                            <span class="stat-item">遊戲中: <span id="playingRooms">0</span></span>
+                        </div>
+                    </div>
+                    
+                    <div id="roomList" class="room-list">
+                        <!-- 動態生成房間列表 -->
+                    </div>
+                </div>
+
+                <!-- 3 缺 1 紅色閃爍提示 -->
+                <div id="nearCompleteAlert" class="near-complete-alert" style="display: none;">
+                    <div class="alert-content">
+                        <div class="alert-icon">🔴</div>
+                        <div class="alert-text">
+                            <h3>3 缺 1！</h3>
+                            <p id="alertMessage">目前有一桌 3 缺 1！想打的快來報名！</p>
+                        </div>
+                        <div class="alert-pulse"></div>
+                    </div>
+                </div>
+
+                <!-- 即時時鐘 -->
+                <div class="realtime-clock">
+                    <div class="clock-display" id="clockDisplay">
+                        <div class="time">00:00:00</div>
+                        <div class="date">2024-01-01</div>
+                    </div>
+                </div>
+            </section>
+                        
+                        <div class="form-group">
+                            <label>選擇金額</label>
+                            <div class="amount-options">
+                                <label class="amount-option">
+                                    <input type="radio" name="amount" value="30/10" disabled>
+                                    <span class="amount-btn">$30/10</span>
+                                </label>
+                                <label class="amount-option">
+                                    <input type="radio" name="amount" value="60/20" disabled>
+                                    <span class="amount-btn">$60/20</span>
+                                </label>
+                                <label class="amount-option">
+                                    <input type="radio" name="amount" value="100/20" disabled>
+                                    <span class="amount-btn">$100/20</span>
+                                </label>
+                                <label class="amount-option">
+                                    <input type="radio" name="amount" value="200/50" disabled>
+                                    <span class="amount-btn">$200/50</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>希望開打時間</label>
+                            <div class="time-range-selector">
+                                <div class="time-input-group">
+                                    <label for="earliestTime">最早可開打時間</label>
+                                    <select id="earliestTime" disabled>
+                                        <!-- 動態生成時間選項 -->
+                                    </select>
+                </div>
+
+                <div class="room-list-container">
+                    <div class="room-list-header">
+                        <h2 class="room-list-title">🎲 房間列表</h2>
+                        <div class="room-stats">
+                            <span class="stat-item">總房間: <span id="totalRooms">0</span></span>
+                            <span class="stat-item">等待中: <span id="waitingRooms">0</span></span>
+                            <span class="stat-item">遊戲中: <span id="playingRooms">0</span></span>
+                        </div>
+                    </div>
+                    
+                    <div id="roomList" class="room-list">
+                        <!-- 動態生成房間列表 -->
+                    </div>
+                </div>
+
+                <!-- 3 缺 1 紅色閃爍提示 -->
+                <div id="nearCompleteAlert" class="near-complete-alert" style="display: none;">
+                    <div class="alert-content">
+                        <div class="alert-icon">🔴</div>
+                        <div class="alert-text">
+                            <h3>3 缺 1！</h3>
+                            <p id="alertMessage">目前有一桌 3 缺 1！想打的快來報名！</p>
+                        </div>
+                        <div class="alert-pulse"></div>
+                    </div>
+                </div>
+
+                <!-- 即時時鐘 -->
+                <div class="realtime-clock">
+                    <div class="clock-display" id="clockDisplay">
+                        <div class="time">00:00:00</div>
+                        <div class="date">2024-01-01</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 統計資訊頁面 -->
+            <section id="statsSection" class="section">
+                <div class="stats-card">
+                    <h2 class="card-title">📊 統計資訊</h2>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">總報名人數</span>
+                            <span id="totalCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">等待配對</span>
+                            <span id="pendingCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">已配對</span>
+                            <span id="matchedCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">配對中</span>
+                            <span id="playingCount" class="stat-value">0</span>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3>金額分佈圖</h3>
+                        <div id="amountChart" class="chart">
+                            <!-- 動態生成圖表 -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 通知區域 -->
+        <div id="notification" class="notification"></div>
+    </div>
+
+    <script src="frontend.js"></script>
+</body>
+</html>

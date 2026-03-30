@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能配對系統 - 管理後台</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="mock-api.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header admin-header">
+            <h1 class="title">🔐 管理後台</h1>
+            
+            <!-- 全場廣播區域 -->
+            <div class="broadcast-section">
+                <div class="broadcast-input-group">
+                    <input type="text" id="broadcastMessage" placeholder="📢 輸入全場廣播訊息..." maxlength="100">
+                    <button id="sendBroadcastBtn" class="broadcast-btn">
+                        <span class="broadcast-icon">📡</span>
+                        <span class="broadcast-text">發送廣播</span>
+                    </button>
+                </div>
+                <div class="broadcast-status" id="broadcastStatus"></div>
+            </div>
+            
+            <div class="nav-buttons">
+                <button id="dashboardView" class="nav-btn active">儀表板</button>
+                <button id="registrationsView" class="nav-btn">報名管理</button>
+                <button id="roomsView" class="nav-btn">房間管理</button>
+                <button id="settingsView" class="nav-btn">系統設定</button>
+                <button class="nav-btn" onclick="location.href='index.html'">🏠 前台</button>
+            </div>
+        </header>
+
+        <!-- 管理員登入對話框 -->
+        <div id="adminLoginModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="login-card">
+                    <h2 class="login-title">🔐 管理員登入</h2>
+                    <div class="login-form">
+                        <div class="form-group">
+                            <label for="adminPassword">管理員密碼</label>
+                            <input type="password" id="adminPassword" placeholder="請輸入管理員密碼" autocomplete="current-password">
+                        </div>
+                        <div class="login-actions">
+                            <button id="adminLoginBtn" class="submit-btn">登入</button>
+                            <button id="cancelLoginBtn" class="cancel-btn">取消</button>
+                        </div>
+                        <div id="loginError" class="error-message" style="display: none;">
+                            密碼錯誤，請重試
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <main id="adminMain" style="display: none;">
+            <!-- 控制台頁面 -->
+            <section id="dashboardSection" class="section active">
+                <div class="admin-card">
+                    <h2 class="card-title">📊 系統概覽</h2>
+                    
+                    <div class="admin-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">總報名人數</span>
+                            <span id="totalCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">等待配對</span>
+                            <span id="pendingCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">已配對</span>
+                            <span id="matchedCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">配對中</span>
+                            <span id="playingCount" class="stat-value">0</span>
+                        </div>
+                    </div>
+
+                    <div class="quick-actions">
+                        <h3>快速操作</h3>
+                        <div class="action-grid">
+                            <button id="createTable" class="admin-btn primary">🎯 手動配對</button>
+                            <button id="clearTable" class="admin-btn secondary">🔄 一鍵清空/結算</button>
+                            <button id="clearAll" class="admin-btn danger">🗑️ 清空所有報名</button>
+                            <button id="exportData" class="admin-btn secondary">📥 匯出資料</button>
+                            <button id="refreshData" class="admin-btn secondary">🔄 刷新資料</button>
+                        </div>
+                    </div>
+
+                    <div class="recent-activity">
+                        <h3>最近活動</h3>
+                        <div id="activityLog" class="activity-log">
+                            <!-- 動態生成活動日誌 -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 房間管理頁面 -->
+            <section id="roomsSection" class="section">
+                <div class="admin-card">
+                    <h2 class="card-title">🏠 房間管理</h2>
+                    
+                    <!-- 玩家狀態勳章 -->
+                    <div class="player-badges-section">
+                        <h3>🏆 玩家狀態勳章</h3>
+                        <div class="badge-controls">
+                            <select id="badgePlayerSelect" class="badge-player-select">
+                                <option value="">選擇玩家...</option>
+                            </select>
+                            <div class="badge-buttons">
+                                <button class="badge-btn fire" onclick="window.adminSystem.giveBadge('fire')">
+                                    🔥 火苗
+                                </button>
+                                <button class="badge-btn money" onclick="window.adminSystem.giveBadge('money')">
+                                    💰 發財
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="room-management">
+                        <!-- 開設新房 -->
+                        <div class="create-room-section">
+                            <h3>🎯 開設新房</h3>
+                            <div class="create-room-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="roomTitle">房間標題</label>
+                                        <input type="text" id="roomTitle" placeholder="例如：明星桌、新手桌">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="roomScore">輸贏底台</label>
+                                        <select id="roomScore">
+                                            <option value="30/10">30/10</option>
+                                            <option value="50/20">50/20</option>
+                                            <option value="100/20">100/20</option>
+                                            <option value="200/50">200/50</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="startTime">開打時間</label>
+                                        <div class="time-input-group">
+                                            <input type="time" id="startTime">
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" id="isFullStart">
+                                                <span class="checkmark"></span>
+                                                滿開
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button id="createRoomBtn" class="admin-btn primary">
+                                    🏠 開設新房
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- 房間列表 -->
+                        <div class="room-list-section">
+                            <h3>📋 現有房間</h3>
+                            <div class="admin-room-list" id="adminRoomList">
+                                <!-- 動態生成房間列表 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="registrationsSection" class="section">
+                <div class="admin-card">
+                    <h2 class="card-title">📋 報名管理</h2>
+                    
+                    <div class="filter-controls">
+                        <div class="form-group">
+                            <label for="statusFilter">狀態篩選</label>
+                            <select id="statusFilter">
+                                <option value="all">全部</option>
+                                <option value="waiting">等待配對</option>
+                                <option value="matched">已配對</option>
+                                <option value="playing">配對中</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="amountFilter">金額篩選</label>
+                            <select id="amountFilter">
+                                <option value="all">全部</option>
+                                <option value="30/10">30/10</option>
+                                <option value="60/20">60/20</option>
+                                <option value="100/20">100/20</option>
+                                <option value="200/50">200/50</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="bulk-actions">
+                        <button id="bulkDelete" class="admin-btn danger">批量刪除</button>
+                        <button id="bulkMatch" class="admin-btn primary">批量配對</button>
+                    </div>
+
+                    <div class="registrations-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="selectAll"></th>
+                                    <th>暱稱</th>
+                                    <th>金額</th>
+                                    <th>時間區間</th>
+                                    <th>報名時間</th>
+                                    <th>狀態</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="registrationsTableBody">
+                                <!-- 動態生成報名列表 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 系統設定頁面 -->
+            <section id="settingsSection" class="section">
+                <div class="admin-card">
+                    <h2 class="card-title">⚙️ 系統設定</h2>
+                    
+                    <div class="settings-sections">
+                        <div class="settings-group">
+                            <h3>玩家管理</h3>
+                            <div class="form-group">
+                                <label for="blacklistPlayer">黑名單管理</label>
+                                <div class="blacklist-controls">
+                                    <input type="text" id="blacklistPlayer" placeholder="輸入玩家名稱">
+                                    <select id="blacklistReason">
+                                        <option value="放鳥">放鳥</option>
+                                        <option value="鬧事">鬧事</option>
+                                        <option value="作弊">作弊</option>
+                                        <option value="其他">其他</option>
+                                    </select>
+                                    <button id="addToBlacklist" class="admin-btn danger">加入黑名單</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>黑名單清單</label>
+                                <div id="blacklistList" class="blacklist-list">
+                                    <!-- 動態生成黑名單 -->
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="playerRating">戰力分級設定</label>
+                                <div class="rating-controls">
+                                    <input type="text" id="ratingPlayerName" placeholder="輸入玩家名稱">
+                                    <select id="playerRating">
+                                        <option value="新手">新手</option>
+                                        <option value="普通">普通</option>
+                                        <option value="快手">快手</option>
+                                        <option value="高手">高手</option>
+                                    </select>
+                                    <button id="setPlayerRating" class="admin-btn secondary">設定戰力</button>
+                                </div>
+                            </div>
+                        </div>
+                            <div class="form-group">
+                                <label for="lineNotifyToken">LINE Notify Token</label>
+                                <input type="password" id="lineNotifyToken" placeholder="請輸入 LINE Notify Token">
+                                <button id="testLineNotify" class="admin-btn secondary">測試通知</button>
+                            </div>
+                            <div class="form-group">
+                                <label for="autoLineNotify">是否開啟 LINE 自動通知</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="autoLineNotify" checked>
+                                    <span class="slider"></span>
+                                </label>
+                                <small style="color: #888888; display: block; margin-top: 5px;">開啟後，當湊桌差一人時會自動發送 LINE 通知</small>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <h3>系統設定</h3>
+                            <div class="form-group">
+                                <label for="autoMatch">自動配對</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="autoMatch">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label for="maxPlayers">最大配對人數</label>
+                                <input type="number" id="maxPlayers" value="4" min="2" max="8">
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <h3>安全設定</h3>
+                            <div class="form-group">
+                                <label for="sessionTimeout">會話超時 (分鐘)</label>
+                                <input type="number" id="sessionTimeout" value="60" min="10" max="480">
+                            </div>
+                            <button id="changePassword" class="admin-btn secondary">變更管理員密碼</button>
+                        </div>
+
+                        <div class="settings-actions">
+                            <button id="saveSettings" class="admin-btn primary">儲存設定</button>
+                            <button id="resetSettings" class="admin-btn danger">重置設定</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 通知區域 -->
+        <div id="notification" class="notification"></div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
