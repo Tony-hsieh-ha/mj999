@@ -481,7 +481,7 @@ class APIRoutes {
             const LINE_CONFIG = {
                 clientId: '2004473747',
                 clientSecret: process.env?.LINE_CLIENT_SECRET || '',
-                redirectUri: 'https://mj999-2168.vercel.app/' // 與 LINE 後台完全一致
+                redirectUri: 'https://mj999-2168.vercel.app/' // 請確保最後面有一個斜線 /
             };
             
             // 向 LINE 請求 access token
