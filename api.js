@@ -775,7 +775,7 @@ class APIRoutes {
 }
 
 // Vercel Serverless Function 路由器
-module.exports = async function handler(req) {
+export default async function handler(req) {
     const apiRoutes = new APIRoutes();
     const url = new URL(req.url);
     const path = url.pathname;
