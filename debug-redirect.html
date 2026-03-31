@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug LINE Redirect URI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .debug-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        button {
+            background: #06C755;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 LINE Redirect URI 除錯工具</h1>
+    
+    <div class="debug-info">
+        <h3>📋 檢查清單</h3>
+        <ol>
+            <li>確認 LINE Developers 後台的 Callback URL 設定</li>
+            <li>確認 Channel ID 是否正確</li>
+            <li>確認 Channel 類型是否為 LINE Login</li>
+            <li>確認 URL 格式完全一致</li>
+        </ol>
+    </div>
+
+    <div class="debug-info">
+        <h3>🎯 正確的設定應該是：</h3>
+        <ul>
+            <li><strong>Channel ID:</strong> 2004473747</li>
+            <li><strong>Callback URL:</strong> https://mj999-2168.vercel.app/</li>
+            <li><strong>Channel 類型:</strong> LINE Login</li>
+        </ul>
+    </div>
+
+    <div class="debug-info">
+        <h3>🔧 測試 LINE 登入 URL</h3>
+        <button onclick="testLogin()">測試 LINE 登入</button>
+        <div id="testResult"></div>
+    </div>
+
+    <div class="debug-info">
+        <h3>📝 當前設定</h3>
+        <pre id="currentConfig"></pre>
+    </div>
+
+    <script>
+        const LINE_CONFIG = {
+            channelId: '2009653134',
+            redirectUri: 'https://mj999-2168.vercel.app/',
+            scope: 'openid profile',
+            nonce: 'debug_' + Date.now()
+        };
+
+        // 顯示當前設定
+        document.getElementById('currentConfig').textContent = JSON.stringify(LINE_CONFIG, null, 2);
+
+        function testLogin() {
+            const state = 'debug_' + Date.now();
+            const authUrl = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CONFIG.channelId}&redirect_uri=${encodeURIComponent(LINE_CONFIG.redirectUri)}&state=${state}&scope=${LINE_CONFIG.scope}&nonce=${LINE_CONFIG.nonce}`;
+            
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.innerHTML = `
+                <div class="debug-info">
+                    <h4>🚀 即將跳轉到 LINE 授權頁面：</h4>
+                    <p><strong>URL:</strong></p>
+                    <pre>${authUrl}</pre>
+                    <p><strong>解碼後的 redirect_uri:</strong> ${LINE_CONFIG.redirectUri}</p>
+                    <button onclick="window.open('${authUrl}', '_blank')">在新視窗開啟</button>
+                    <button onclick="window.location.href='${authUrl}'">直接跳轉</button>
+                </div>
+            `;
+        }
+
+        // 檢查 URL 參數
+        function checkURLParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            const error = urlParams.get('error');
+            const errorDescription = urlParams.get('error_description');
+            
+            if (error) {
+                document.body.innerHTML += `
+                    <div class="debug-info error">
+                        <h3>❌ LINE 回調錯誤</h3>
+                        <p><strong>錯誤代碼:</strong> ${error}</p>
+                        <p><strong>錯誤描述:</strong> ${errorDescription}</p>
+                        <p><strong>建議解決方案:</strong></p>
+                        <ul>
+                            <li>檢查 LINE Developers 後台的 Callback URL 設定</li>
+                            <li>確認 URL 格式完全一致 (包括協議、網域、斜線)</li>
+                            <li>確認 Channel 類型為 LINE Login</li>
+                        </ul>
+                    </div>
+                `;
+            } else if (code) {
+                document.body.innerHTML += `
+                    <div class="debug-info success">
+                        <h3>✅ LINE 授權成功！</h3>
+                        <p>獲得授權碼: ${code}</p>
+                        <p>State: ${state}</p>
+                        <p>這表示 Callback URL 設定正確！</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 頁面載入時檢查
+        window.addEventListener('load', checkURLParams);
+    </script>
+</body>
+</html>

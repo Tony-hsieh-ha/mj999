@@ -479,8 +479,8 @@ class APIRoutes {
             
             // LINE Token 交換設定
             const LINE_CONFIG = {
-                clientId: '2004473747',
-                clientSecret: process.env.LINE_CLIENT_SECRET || 'a5ef8b23a930a8320c273f21badc78c2',
+                clientId: '2009653134',
+                clientSecret: process.env.LINE_CLIENT_SECRET || 'c0cf92398cab27e13a8402501489ff0e',
                 redirectUri: 'https://mj999-2168.vercel.app/' // 確認最後面有一個斜線，與 LINE 後台一致
             };
             
