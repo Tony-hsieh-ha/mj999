@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "mj999-admin-system",
   "builds": [
     {
       "src": "api.js",
@@ -13,23 +12,8 @@
       "dest": "/api.js"
     },
     {
-      "src": "/admin",
-      "dest": "/admin.html"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/$1.html"
+      "dest": "/$1"
     }
-  ],
-  "env": {
-    "ADMIN_PASSWORD": "@admin_password",
-    "LINE_NOTIFY_TOKEN": "@line_notify_token",
-    "LINE_CLIENT_SECRET": "@line_client_secret",
-    "DEFAULT_LOCATION": "@default_location"
-  },
-  "functions": {
-    "api.js": {
-      "maxDuration": 10
-    }
-  }
+  ]
 }

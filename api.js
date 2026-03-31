@@ -107,6 +107,233 @@ class LineNotifyService {
     }
 }
 
+// Mock API - 模擬後端服務
+class MockAPI {
+    constructor() {
+        this.rooms = this.loadRooms();
+        this.lineNotifyToken = null;
+        this.notificationCooldown = new Map();
+        this.blacklist = this.loadBlacklist();
+        this.playerRatings = this.loadPlayerRatings();
+        this.waitingList = this.loadWaitingList();
+        this.initLineNotify();
+    }
+
+    initLineNotify() {
+        // 從環境變數獲取 Token
+        if (typeof process !== 'undefined' && process.env?.LINE_NOTIFY_TOKEN) {
+            this.lineNotifyToken = process.env.LINE_NOTIFY_TOKEN;
+        } else {
+            this.lineNotifyToken = localStorage.getItem('lineNotifyToken') || '';
+        }
+    }
+
+    // 房間管理
+    loadRooms() {
+        const saved = localStorage.getItem('mahjongRooms');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    saveRooms(rooms) {
+        localStorage.setItem('mahjongRooms', JSON.stringify(rooms));
+        this.rooms = rooms;
+    }
+
+    getRooms() {
+        return this.rooms;
+    }
+
+    addRoom(roomData) {
+        const room = {
+            id: Date.now(),
+            ...roomData,
+            createdAt: new Date().toISOString(),
+            status: 'waiting',
+            currentPlayers: roomData.players ? roomData.players.length : 0,
+            maxPlayers: 4
+        };
+        
+        this.rooms.push(room);
+        this.saveRooms(this.rooms);
+        return room;
+    }
+
+    updateRoom(roomId, updates) {
+        const index = this.rooms.findIndex(r => r.id === roomId);
+        if (index !== -1) {
+            this.rooms[index] = { ...this.rooms[index], ...updates };
+            this.saveRooms(this.rooms);
+            return this.rooms[index];
+        }
+        return null;
+    }
+
+    deleteRoom(roomId) {
+        this.rooms = this.rooms.filter(r => r.id !== roomId);
+        this.saveRooms(this.rooms);
+    }
+
+    // 玩家管理
+    joinRoom(roomId, playerData) {
+        const room = this.rooms.find(r => r.id === roomId);
+        if (!room) return { success: false, message: '房間不存在' };
+        
+        if (room.currentPlayers >= room.maxPlayers) {
+            return { success: false, message: '房間已滿' };
+        }
+
+        if (!room.players) room.players = [];
+        
+        // 檢查玩家是否已經在房間中
+        const existingPlayer = room.players.find(p => p.id === playerData.id);
+        if (existingPlayer) {
+            return { success: false, message: '玩家已經在房間中' };
+        }
+
+        room.players.push(playerData);
+        room.currentPlayers = room.players.length;
+        
+        if (room.currentPlayers === room.maxPlayers) {
+            room.status = 'full';
+        }
+
+        this.saveRooms(this.rooms);
+        return { success: true, room };
+    }
+
+    leaveRoom(roomId, playerId) {
+        const room = this.rooms.find(r => r.id === roomId);
+        if (!room) return { success: false, message: '房間不存在' };
+
+        if (!room.players) room.players = [];
+        
+        room.players = room.players.filter(p => p.id !== playerId);
+        room.currentPlayers = room.players.length;
+        
+        if (room.currentPlayers < room.maxPlayers) {
+            room.status = 'waiting';
+        }
+
+        this.saveRooms(this.rooms);
+        return { success: true, room };
+    }
+
+    // 報名管理
+    getRegistrations() {
+        const saved = localStorage.getItem('mahjongRegistrations');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    saveRegistrations(registrations) {
+        localStorage.setItem('mahjongRegistrations', JSON.stringify(registrations));
+    }
+
+    loadTables() {
+        const saved = localStorage.getItem('mahjongTables');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    saveTables(tables) {
+        localStorage.setItem('mahjongTables', JSON.stringify(tables));
+    }
+
+    // 黑名單管理
+    loadBlacklist() {
+        const saved = localStorage.getItem('blacklist');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    saveBlacklist(blacklist) {
+        localStorage.setItem('blacklist', JSON.stringify(blacklist));
+    }
+
+    isPlayerBlacklisted(playerName) {
+        return this.blacklist.includes(playerName);
+    }
+
+    addToBlacklist(playerName) {
+        if (!this.blacklist.includes(playerName)) {
+            this.blacklist.push(playerName);
+            this.saveBlacklist(this.blacklist);
+            return true;
+        }
+        return false;
+    }
+
+    removeFromBlacklist(playerName) {
+        const index = this.blacklist.indexOf(playerName);
+        if (index > -1) {
+            this.blacklist.splice(index, 1);
+            this.saveBlacklist(this.blacklist);
+            return true;
+        }
+        return false;
+    }
+
+    // 玩家評分系統
+    loadPlayerRatings() {
+        const saved = localStorage.getItem('playerRatings');
+        return saved ? JSON.parse(saved) : {};
+    }
+
+    savePlayerRatings(ratings) {
+        localStorage.setItem('playerRatings', JSON.stringify(ratings));
+    }
+
+    getPlayerRating(playerName) {
+        const ratings = this.loadPlayerRatings();
+        return ratings[playerName] || 3; // 預設評分 3
+    }
+
+    updatePlayerRating(playerName, rating) {
+        const ratings = this.loadPlayerRatings();
+        ratings[playerName] = rating;
+        this.savePlayerRatings(ratings);
+    }
+
+    // 候補清單管理
+    loadWaitingList() {
+        const saved = localStorage.getItem('waitingList');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    saveWaitingList(waitingList) {
+        localStorage.setItem('waitingList', JSON.stringify(waitingList));
+    }
+
+    // 桌次配對
+    async checkForCompleteTable(amount) {
+        const registrations = this.getRegistrations();
+        const waitingRegistrations = registrations.filter(r => r.status === 'waiting' && r.amount === amount);
+        
+        if (waitingRegistrations.length >= 4) {
+            // 創建桌次
+            const table = {
+                id: Date.now(),
+                amount: amount,
+                players: waitingRegistrations.slice(0, 4),
+                status: 'matched',
+                createdAt: new Date().toISOString()
+            };
+            
+            // 更新報名狀態
+            waitingRegistrations.slice(0, 4).forEach(reg => {
+                reg.status = 'matched';
+            });
+            
+            this.saveRegistrations(registrations);
+            
+            const tables = this.loadTables();
+            tables.push(table);
+            this.saveTables(tables);
+            
+            return table;
+        }
+        
+        return null;
+    }
+}
+
 // API 安全保護機制
 class SecureAPI {
     constructor() {
@@ -352,6 +579,23 @@ class APIRoutes {
         });
     }
 
+    // 公開路由 - 獲取房間列表
+    async getRooms(req) {
+        const rooms = this.mockAPI.getRooms();
+        return new Response(JSON.stringify(rooms), {
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
+    // 公開路由 - 加入房間
+    async joinRoom(req) {
+        const { roomId, playerData } = await req.json();
+        const result = this.mockAPI.joinRoom(roomId, playerData);
+        return new Response(JSON.stringify(result), {
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
     // 管理員路由 - 新增報名
     async addRegistration(req) {
         const data = await req.json();
@@ -531,7 +775,7 @@ class APIRoutes {
 }
 
 // Vercel Serverless Function 路由器
-export default async function handler(req) {
+module.exports = async function handler(req) {
     const apiRoutes = new APIRoutes();
     const url = new URL(req.url);
     const path = url.pathname;
@@ -541,6 +785,8 @@ export default async function handler(req) {
         // 公開路由
         'GET /api/registrations': apiRoutes.secureAPI.wrapPublicRoute(() => apiRoutes.getRegistrations(req)),
         'GET /api/stats': apiRoutes.secureAPI.wrapPublicRoute(() => apiRoutes.getStats(req)),
+        'GET /api/rooms': apiRoutes.secureAPI.wrapPublicRoute(() => apiRoutes.getRooms(req)),
+        'POST /api/join-room': apiRoutes.secureAPI.wrapPublicRoute(() => apiRoutes.joinRoom(req)),
         
         // LINE 登入路由
         'POST /api/line/token': apiRoutes.secureAPI.wrapPublicRoute(() => apiRoutes.handleLineToken(req)),
@@ -587,9 +833,4 @@ export default async function handler(req) {
         status: 404,
         headers: { 'Content-Type': 'application/json' }
     });
-}
-
-// 擴展 MockAPI 以支援儲存
-MockAPI.prototype.saveRegistrations = function(registrations) {
-    localStorage.setItem('mahjongRegistrations', JSON.stringify(registrations));
 };
