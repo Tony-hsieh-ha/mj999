@@ -9,24 +9,23 @@ class FrontendSystem {
     }
 
     async init() {
-        // 強制檢查登入狀態
+        // 檢查登入狀態
         await this.checkLoginStatus();
         
-        // 如果未登入，立即跳轉到登入頁面
+        // 如果未登入，顯示登入提示但不強制跳轉
         if (!this.isLoggedIn) {
-            this.redirectToLogin();
-            return;
+            this.showLoginPrompt();
+            // 不立即跳轉，讓用戶可以選擇登入
         }
         
-        // 只有在登入後才初始化系統
+        // 無論是否登入都初始化基本系統
         this.loadData();
-        this.loadUserInfo();
         this.setupEventListeners();
         this.updateUI();
         this.startAutoRefresh();
         this.startClock();
         this.startWaitingTimer();
-        this.startAutoSync(); // 新增自動同步
+        this.startAutoSync();
     }
     
     // 檢查登入狀態
@@ -190,7 +189,16 @@ class FrontendSystem {
         const registrationForm = document.getElementById('registrationForm');
 
         if (userProfile) userProfile.style.display = 'none';
-        if (loginPrompt) loginPrompt.style.display = 'block';
+        if (loginPrompt) {
+            loginPrompt.style.display = 'block';
+            // 添加登入按鈕事件
+            const loginBtn = loginPrompt.querySelector('.login-btn');
+            if (loginBtn) {
+                loginBtn.onclick = () => {
+                    window.location.href = 'line-login.html';
+                };
+            }
+        }
         if (registrationForm) registrationForm.style.display = 'none';
     }
 
